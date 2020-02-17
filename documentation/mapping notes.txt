@@ -1,0 +1,62 @@
+Have Mapping: 
+  x populate_encounters
+  x populate_diagnosis
+  x populate_pregnant_status
+  x populate_breastfeeding_status
+  x populate_patient_history
+  x populate_side_effects
+  x populate_presenting_complaints
+  x populate_outcomes
+  x populate_family_planning
+  x populate_appointment
+  x populate_relationships
+  x	populate_contact_details
+  x	medication_adherences
+  x	medication_dispensations
+  x	populate_people
+  x	populate_person_address
+  x	update_person_type (person_has_types)
+  x	populate_person_names	
+  
+ No Mappings:
+	populate_vitals
+	populate_symptoms
+	populate_tb_statuses
+	populate_prescription
+  x	populate_lab_orders
+	populate_occupation
+	populate_dispensation
+	populate_adherence
+	populate_hiv_staging_info
+	populate_precription_has_regimen
+	populate_lab_test_results
+	initiate_de_duplication
+	populate_de_identifier
+
+
+  
+I've used created_at and updated_at as the change data dates because those are the dates the RDS is using
+	based on the mapping document. 
+	
+
+diagnosis: 
+	value_coded.  we have two possible value coded values per record, do we take the one with primary or secondary diagnosis?
+	
+medication_adherences: the mapping is confusing.  I can't find anything like medication_prescriptions or 
+	medication_prescription_id in rds, and I don't know how to use {drug_dispensed_id}
+	difficult to tell what the unique key for change data is supposed to be with outcomes
+person_addresses:
+	need lookup logic for functions categorize_address, get_district_id
+	rds.person_address.landmark is missing
+	rds.person_address.date_changed is missing
+person_has_types
+	I can't see the difference between person_type_id = 4 and person_type_id = 2
+	how person_id maps needs to be more clear and testd.
+	person_has_types has a fk to the person table, but the id's used in person_has_types overlap
+	since they come from different tables. For example user_id and person_id.  Should person_has_types only load records in the person table?
+	That's what I've done.
+	
+	
+	
+	
+	
