@@ -1,6 +1,6 @@
 <transformation>
   <info>
-    <name>ids.medicationAdherences</name>
+    <name>ids.hiv_staging_info</name>
     <description/>
     <extended_description/>
     <trans_version/>
@@ -426,9 +426,9 @@
     <clusterschemas>
     </clusterschemas>
     <created_user>-</created_user>
-    <created_date>2019/12/14 11:39:49.780</created_date>
+    <created_date>2020/02/18 20:46:49.756</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/21 14:22:17.461</modified_date>
+    <modified_date>2020/02/23 20:21:44.726</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -554,23 +554,38 @@
   </connection>
   <order>
     <hop>
-      <from>medication_adherences</from>
-      <to>drug_id</to>
+      <from>reason_for_starting_mdef_value_code</from>
+      <to>reason_for_starting_value_text_code</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>drug_id</from>
-      <to>remove_%</to>
+      <from>reason_for_starting_value_text_code</from>
+      <to>reason_for_starting_and_who_stage_calculator</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>remove_%</from>
-      <to>if_value_numeric_isnull_put_value_text</to>
+      <from>who_stage_value_text_code</from>
+      <to>reason_for_starting_mdef_value_code</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>if_value_numeric_isnull_put_value_text</from>
+      <from>reason_for_starting_and_who_stage_calculator</from>
       <to>Insert / update</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>obs - hiv_staging_info</from>
+      <to>who_stage_value_coded</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Execute SQL script</from>
+      <to>obs - hiv_staging_info</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>who_stage_value_coded</from>
+      <to>who_stage_value_text_code</to>
       <enabled>Y</enabled>
     </hop>
   </order>
@@ -587,75 +602,86 @@
     </partitioning>
     <connection>IDS</connection>
     <commit>100</commit>
-    <update_bypassed>Y</update_bypassed>
+    <update_bypassed>N</update_bypassed>
     <lookup>
       <schema/>
-      <table>medication_adherences</table>
+      <table>hiv_staging_infos</table>
       <key>
-        <name>obs_id</name>
-        <field>adherence_id</field>
+        <name>patient_id</name>
+        <field>person_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>start_date</name>
+        <field>start_date</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>adherence_id</name>
-        <rename>obs_id</rename>
-        <update>N</update>
-      </value>
-      <value>
-        <name>medication_dispensation_id</name>
-        <rename>medication_prescription_id</rename>
+        <name>person_id</name>
+        <rename>patient_id</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>drug_id</name>
-        <rename>dispensed_drug_id</rename>
+        <name>start_date</name>
+        <rename>start_date</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>adherence</name>
-        <rename>adherence</rename>
+        <name>date_enrolled</name>
+        <rename>date_enrolled</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>voided</name>
-        <rename>voided</rename>
+        <name>hiv_test_date</name>
+        <rename>hiv_test_date</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>voided_by</name>
-        <rename>voided_by</rename>
+        <name>hiv_test_facility</name>
+        <rename>test_location</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>voided_date</name>
-        <rename>date_voided</rename>
+        <name>transfer_in</name>
+        <rename>transfer_in</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>void_reason</name>
-        <rename>void_reason</rename>
+        <name>re_initiated</name>
+        <rename>re_initiated</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>app_date_created</name>
-        <rename>date_created</rename>
+        <name>age_at_initiation</name>
+        <rename>age_at_initiation</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>app_date_updated</name>
-        <rename>date_created</rename>
+        <name>age_in_days_at_initiation</name>
+        <rename>age_in_days</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>updated_at</name>
-        <rename>updated_at</rename>
+        <name>who_stage</name>
+        <rename>who_stage_mdef_concept_id</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>reason_for_starting</name>
+        <rename>reason_for_starting_mdef_concept_id</rename>
         <update>Y</update>
       </value>
       <value>
         <name>created_at</name>
-        <rename>created_at</rename>
-        <update>Y</update>
+        <rename>updated_at</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>updated_at</name>
+        <rename>updated_at</rename>
+        <update>N</update>
       </value>
     </lookup>
     <attributes/>
@@ -668,60 +694,12 @@
     </remotesteps>
     <GUI>
       <xloc>944</xloc>
-      <yloc>240</yloc>
+      <yloc>256</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>drug_id</name>
-    <type>DBLookup</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
-    <lookup>
-      <schema/>
-      <table>medication_prescriptions</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
-      <key>
-        <name>drug_dispensed</name>
-        <field>medication_prescription_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <value>
-        <name>drug_id</name>
-        <rename>dispensed_drug_id</rename>
-        <default/>
-        <type>Integer</type>
-      </value>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>304</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>medication_adherences</name>
+    <name>obs - hiv_staging_info</name>
     <type>TableInput</type>
     <description/>
     <distribute>Y</distribute>
@@ -732,34 +710,101 @@
       <schema_name/>
     </partitioning>
     <connection>RDS</connection>
-    <sql>SELECT
-  o.obs_id,
-  o.order_id as medication_prescription_id,
-  o.order_id as drug_dispensed,
-  o.order_id,
-  o.value_numeric,
-  o.value_text,
-  o.voided,
-  o.voided_by,
-  o.date_voided,
-  o.void_reason,
-  o.date_created,
-  o.created_at,
-  o.updated_at
-FROM obs o
-  JOIN encounter e
-    ON o.encounter_id = e.encounter_id
-  JOIN person p
-    ON e.patient_id = p.person_id 
-WHERE concept_id = 6987 
-AND o.updated_at >= '${upd_medicationAdherences}'
+    <sql>SELECT * FROM 
+(SELECT distinct p.patient_id, p.updated_at,'concept_name' concept_name  
+  FROM patient p JOIN 
+   patient_program pp 
+ON p.patient_id = pp.patient_id
+ JOIN patient_state ps 
+ON pp.patient_program_id = ps.patient_program_id 
+WHERE pp.program_id = 1 
+AND p.voided = 0 
+AND pp.voided = 0  
+AND ps.state = 7 
+AND ps.voided = 0) as patient_id 
+
+LEFT JOIN
+
+(SELECT patient_id, MIN(start_date) start_date 
+FROM patient_state s 
+JOIN patient_program p 
+ON p.patient_program_id = s.patient_program_id 
+WHERE s.voided = 0
+   AND s.state = 7 
+   AND p.program_id = 1
+GROUP BY patient_id) 
+   AS start_date 
+ON patient_id.patient_id = start_date.patient_id
+
+LEFT JOIN
+
+(SELECT person_id, MIN(DATE(obs_datetime)) as date_enrolled 
+FROM obs WHERE
+concept_id = 2834 AND value_drug IN (SELECT drug_id
+FROM drug d WHERE d.concept_id IN 
+(SELECT cs.concept_id FROM concept_set cs WHERE cs.concept_set = 1085))
+GROUP BY person_id) as date_enrolled
+ON patient_id.patient_id = date_enrolled.person_id
+
+LEFT JOIN 
+
+(SELECT patient_id, re_initiated_check(patient_id, date_enrolled) re_initiated,2280 as transfer_in FROM temp_earliest_start_date
+WHERE DATE(date_enrolled) != DATE(earliest_start_date)
+GROUP BY patient_id
+HAVING re_initiated != 'Re-initiated') AS transfer_in
+ON patient_id.patient_id = transfer_in.patient_id
+
+LEFT JOIN
+
+(SELECT patient_id, re_initiated_check(patient_id, date_enrolled) as re_initiated, 2280 as re_initiated_code
+  FROM temp_earliest_start_date
+  WHERE DATE(date_enrolled) != DATE(earliest_start_date)
+  GROUP BY patient_id
+  HAVING re_initiated = 'Re-initiated') AS re_initiated
+  ON patient_id.patient_id = re_initiated.patient_id
+
+LEFT JOIN
+
+ (SELECT patient_id, age_at_initiation, age_in_days FROM temp_earliest_start_date) ages
+ON patient_id.patient_id = ages.patient_id
+
+LEFT JOIN
+ 
+ (SELECT person_id, value_coded who_stage_value_coded, value_text who_stage_value_text FROM obs o2 WHERE concept_id  = 7562 AND o2.voided = 0 GROUP BY person_id) as whostage
+ ON patient_id.patient_id = whostage.person_id
+ 
+ LEFT JOIN 
+ 
+ (SELECT person_id, value_coded rfst_value_coded, value_text rfst_value_text FROM obs WHERE concept_id = 7563 
+AND voided = 0 GROUP BY person_id)
+AS reason_for_starting
+ON patient_id.patient_id = reason_for_starting.person_id
+
+LEFT JOIN
+
+(SELECT person_id, DATE(max(value_datetime)) hiv_test_date FROM obs WHERE concept_id = 7882 AND voided = 0
+GROUP BY person_id) AS hiv_test_date
+ON patient_id.patient_id = hiv_test_date.person_id
+
+LEFT JOIN
+
+(SELECT person_id, COALESCE(MAX(value_text), 'UNKNOWN') test_location FROM obs 
+JOIN (SELECT DATE(max(obs_datetime)) max_date from obs WHERE concept_id = 7881 AND voided  = 0 GROUP BY person_id) as max_date
+ON DATE(obs.obs_datetime) = max_date.max_date
+WHERE obs.concept_id = 7881
+GROUP BY person_id) AS hiv_test_location
+ON patient_id.patient_id = hiv_test_location.person_id
+WHERE updated_at >= '${upd_hiv_staging_info}'
+
+
+
 
 
 </sql>
     <limit>0</limit>
     <lookup/>
     <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
+    <variables_active>N</variables_active>
     <lazy_conversion_active>N</lazy_conversion_active>
     <attributes/>
     <cluster_schema/>
@@ -770,52 +815,13 @@ AND o.updated_at >= '${upd_medicationAdherences}'
       </output>
     </remotesteps>
     <GUI>
-      <xloc>80</xloc>
-      <yloc>240</yloc>
+      <xloc>64</xloc>
+      <yloc>48</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>remove_%</name>
-    <type>ReplaceString</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <fields>
-      <field>
-        <in_stream_name>value_text</in_stream_name>
-        <out_stream_name>cleaned_value_text</out_stream_name>
-        <use_regex>no</use_regex>
-        <replace_string>%</replace_string>
-        <replace_by_string/>
-        <set_empty_string>N</set_empty_string>
-        <replace_field_by_string/>
-        <whole_word>no</whole_word>
-        <case_sensitive>no</case_sensitive>
-        <is_unicode>no</is_unicode>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>448</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>if_value_numeric_isnull_put_value_text</name>
+    <name>reason_for_starting_and_who_stage_calculator</name>
     <type>Calculator</type>
     <description/>
     <distribute>Y</distribute>
@@ -827,12 +833,27 @@ AND o.updated_at >= '${upd_medicationAdherences}'
     </partitioning>
     <failIfNoFile>Y</failIfNoFile>
     <calculation>
-      <field_name>adherence</field_name>
+      <field_name>reason_for_starting_mdef_concept_id</field_name>
       <calc_type>NVL</calc_type>
-      <field_a>value_numeric</field_a>
-      <field_b>cleaned_value_text</field_b>
+      <field_a>master_def_reason_for_starting_value_coded</field_a>
+      <field_b>master_def_reason_for_starting_value_text_code</field_b>
       <field_c/>
-      <value_type>Number</value_type>
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <calculation>
+      <field_name>who_stage_mdef_concept_id</field_name>
+      <calc_type>NVL</calc_type>
+      <field_a>master_def_who_stage_value_coded</field_a>
+      <field_b>master_def_who_stage_value_text_code</field_b>
+      <field_c/>
+      <value_type>Integer</value_type>
       <value_length>-1</value_length>
       <value_precision>-1</value_precision>
       <remove>N</remove>
@@ -850,8 +871,306 @@ AND o.updated_at >= '${upd_medicationAdherences}'
       </output>
     </remotesteps>
     <GUI>
-      <xloc>704</xloc>
-      <yloc>240</yloc>
+      <xloc>1200</xloc>
+      <yloc>256</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>reason_for_starting_mdef_value_code</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>rfst_value_coded</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>master_def_reason_for_starting_value_coded</rename>
+        <default/>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>928</xloc>
+      <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>reason_for_starting_value_text_code</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>rfst_value_text</name>
+        <field>definition</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>master_def_reason_for_starting_value_text_code</rename>
+        <default/>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1200</xloc>
+      <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>who_stage_value_coded</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>who_stage_value_coded</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>master_def_who_stage_value_coded</rename>
+        <default/>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>272</xloc>
+      <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>who_stage_value_text_code</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>who_stage_value_text</name>
+        <field>definition</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>master_def_who_stage_value_text_code</rename>
+        <default/>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>560</xloc>
+      <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Execute SQL script</name>
+    <type>ExecSQL</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <execute_each_row>N</execute_each_row>
+    <single_statement>N</single_statement>
+    <replace_variables>N</replace_variables>
+    <quoteString>N</quoteString>
+    <sql>DROP TABLE IF EXISTS temp_earliest_start_date;
+CREATE TABLE IF NOT EXISTS temp_earliest_start_date (
+             patient_id BIGINT PRIMARY KEY,
+             date_enrolled DATE NOT NULL,
+             earliest_start_date DATETIME,
+             birthdate DATE DEFAULT NULL,
+             birthdate_estimated BOOLEAN,
+             death_date DATE,
+             gender VARCHAR(32),
+             age_at_initiation INT DEFAULT NULL,
+             age_in_days INT DEFAULT NULL
+          ) ENGINE=MEMORY;
+CREATE INDEX patient_id_index ON temp_earliest_start_date (patient_id);
+CREATE INDEX date_enrolled_index ON temp_earliest_start_date (date_enrolled);
+CREATE INDEX patient_id__date_enrolled_index ON temp_earliest_start_date (patient_id, date_enrolled);
+CREATE INDEX earliest_start_date_index ON temp_earliest_start_date (earliest_start_date);
+CREATE INDEX earliest_start_date__date_enrolled_index ON temp_earliest_start_date (earliest_start_date, date_enrolled);
+
+INSERT INTO temp_earliest_start_date
+          select
+            `p`.`patient_id` AS `patient_id`,
+            cast(patient_date_enrolled(`p`.`patient_id`) as date) AS `date_enrolled`,
+            date_antiretrovirals_started(`p`.`patient_id`, min(`s`.`start_date`)) AS `earliest_start_date`,
+            `pe`.`birthdate`,
+            `pe`.`birthdate_estimated`,
+            `person`.`death_date` AS `death_date`,
+            `pe`.`gender` AS `gender`,
+            (select timestampdiff(year, `pe`.`birthdate`, min(`s`.`start_date`))) AS `age_at_initiation`,
+            (select timestampdiff(day, `pe`.`birthdate`, min(`s`.`start_date`))) AS `age_in_days`
+          from
+            ((`patient_program` `p`
+            left join `person` `pe` ON ((`pe`.`person_id` = `p`.`patient_id`))
+            left join `patient_state` `s` ON ((`p`.`patient_program_id` = `s`.`patient_program_id`)))
+            left join `person` ON ((`person`.`person_id` = `p`.`patient_id`)))
+          where
+            ((`p`.`voided` = 0)
+                and (`s`.`voided` = 0)
+                and (`p`.`program_id` = 1)
+                and (`s`.`state` = 7))
+                and (DATE(`s`.`start_date`) >= '1900-01-1 00:00:00')
+          group by `p`.`patient_id`
+          HAVING date_enrolled IS NOT NULL;
+
+
+</sql>
+    <set_params>N</set_params>
+    <insert_field/>
+    <update_field/>
+    <delete_field/>
+    <read_field/>
+    <arguments>
+    </arguments>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>192</xloc>
+      <yloc>304</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

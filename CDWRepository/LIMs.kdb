@@ -1,9 +1,9 @@
   <connection>
-    <name>IDS</name>
+    <name>LIMs</name>
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>ids</database>
+    <database>gw_lims</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -11,7 +11,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute><code>EXTRA_OPTION_MYSQL.useSSL</code><attribute>false</attribute></attribute>
       <attribute><code>FORCE_IDENTIFIERS_TO_LOWERCASE</code><attribute>N</attribute></attribute>
       <attribute><code>FORCE_IDENTIFIERS_TO_UPPERCASE</code><attribute>N</attribute></attribute>
       <attribute><code>IS_CLUSTERED</code><attribute>N</attribute></attribute>

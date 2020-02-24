@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 16:41:59.951</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/03 08:30:15.069</modified_date>
+    <modified_date>2020/02/23 15:57:48.582</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -694,6 +694,12 @@
         <condition>=</condition>
         <name2/>
       </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
       <value>
         <name>master_definition_id</name>
         <rename>lkup_concept_id</rename>
@@ -729,7 +735,8 @@
     <connection>RDS</connection>
     <sql>SELECT ob.obs_id as presenting_complaint_id
 	, ob.concept_id
-    , ob.encounter_id
+    , ob.encounter_id,
+     'concept_name' as concept_name
     , ob.value_coded
     , ob.voided
     , ob.voided_by
@@ -760,8 +767,8 @@ WHERE en.encounter_type = 122
       </output>
     </remotesteps>
     <GUI>
-      <xloc>208</xloc>
-      <yloc>224</yloc>
+      <xloc>144</xloc>
+      <yloc>208</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -788,7 +795,13 @@ WHERE en.encounter_type = 122
       <eat_row_on_failure>N</eat_row_on_failure>
       <key>
         <name>value_coded</name>
-        <field>definition</field>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
         <condition>=</condition>
         <name2/>
       </key>

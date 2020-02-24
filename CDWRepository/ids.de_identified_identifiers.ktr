@@ -1,6 +1,6 @@
 <transformation>
   <info>
-    <name>ids.medicationAdherences</name>
+    <name>ids.de_identified_identifiers</name>
     <description/>
     <extended_description/>
     <trans_version/>
@@ -426,10 +426,10 @@
     <clusterschemas>
     </clusterschemas>
     <created_user>-</created_user>
-    <created_date>2019/12/14 11:39:49.780</created_date>
+    <created_date>2020/02/23 01:39:54.810</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/21 14:22:17.461</modified_date>
-    <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
+    <modified_date>2020/02/23 02:02:53.649</modified_date>
+    <key_for_session_key/>
     <is_key_private>N</is_key_private>
   </info>
   <notepads>
@@ -493,87 +493,89 @@
       </attribute>
     </attributes>
   </connection>
-  <connection>
-    <name>RDS</name>
-    <server>localhost</server>
-    <type>MYSQL</type>
-    <access>Native</access>
-    <database>rds_small_site</database>
-    <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
-    <servername/>
-    <data_tablespace/>
-    <index_tablespace/>
-    <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>IS_CLUSTERED</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>PORT_NUMBER</code>
-        <attribute>3306</attribute>
-      </attribute>
-      <attribute>
-        <code>PRESERVE_RESERVED_WORD_CASE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>QUOTE_ALL_FIELDS</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>USE_POOLING</code>
-        <attribute>N</attribute>
-      </attribute>
-    </attributes>
-  </connection>
   <order>
     <hop>
-      <from>medication_adherences</from>
-      <to>drug_id</to>
+      <from>people</from>
+      <to>Generate random value</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>drug_id</from>
-      <to>remove_%</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>remove_%</from>
-      <to>if_value_numeric_isnull_put_value_text</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>if_value_numeric_isnull_put_value_text</from>
+      <from>Generate random value</from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
   </order>
+  <step>
+    <name>people</name>
+    <type>TableInput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <sql>SELECT
+  person_id
+, app_date_created
+, app_date_updated
+, created_at
+, updated_at
+FROM people
+WHERE updated_at >= '${upd_de_identified_identifier}'
+</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>192</xloc>
+      <yloc>288</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Generate random value</name>
+    <type>RandomValue</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <fields>
+      <field>
+        <name>identifier</name>
+        <type>random string</type>
+      </field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>400</xloc>
+      <yloc>288</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step>
     <name>Insert / update</name>
     <type>InsertUpdate</type>
@@ -587,123 +589,45 @@
     </partitioning>
     <connection>IDS</connection>
     <commit>100</commit>
-    <update_bypassed>Y</update_bypassed>
+    <update_bypassed>N</update_bypassed>
     <lookup>
       <schema/>
-      <table>medication_adherences</table>
+      <table>de_identified_identifiers</table>
       <key>
-        <name>obs_id</name>
-        <field>adherence_id</field>
+        <name>person_id</name>
+        <field>person_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>adherence_id</name>
-        <rename>obs_id</rename>
+        <name>identifier</name>
+        <rename>identifier</rename>
         <update>N</update>
       </value>
       <value>
-        <name>medication_dispensation_id</name>
-        <rename>medication_prescription_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>drug_id</name>
-        <rename>dispensed_drug_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>adherence</name>
-        <rename>adherence</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>voided</name>
-        <rename>voided</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>voided_by</name>
-        <rename>voided_by</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>voided_date</name>
-        <rename>date_voided</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>void_reason</name>
-        <rename>void_reason</rename>
-        <update>Y</update>
+        <name>person_id</name>
+        <rename>person_id</rename>
+        <update>N</update>
       </value>
       <value>
         <name>app_date_created</name>
-        <rename>date_created</rename>
-        <update>Y</update>
+        <rename>app_date_created</rename>
+        <update>N</update>
       </value>
       <value>
         <name>app_date_updated</name>
-        <rename>date_created</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>updated_at</name>
-        <rename>updated_at</rename>
-        <update>Y</update>
+        <rename>app_date_updated</rename>
+        <update>N</update>
       </value>
       <value>
         <name>created_at</name>
         <rename>created_at</rename>
-        <update>Y</update>
+        <update>N</update>
       </value>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>944</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>drug_id</name>
-    <type>DBLookup</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
-    <lookup>
-      <schema/>
-      <table>medication_prescriptions</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
-      <key>
-        <name>drug_dispensed</name>
-        <field>medication_prescription_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
       <value>
-        <name>drug_id</name>
-        <rename>dispensed_drug_id</rename>
-        <default/>
-        <type>Integer</type>
+        <name>updated_at</name>
+        <rename>updated_at</rename>
+        <update>N</update>
       </value>
     </lookup>
     <attributes/>
@@ -715,143 +639,8 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>304</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>medication_adherences</name>
-    <type>TableInput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>RDS</connection>
-    <sql>SELECT
-  o.obs_id,
-  o.order_id as medication_prescription_id,
-  o.order_id as drug_dispensed,
-  o.order_id,
-  o.value_numeric,
-  o.value_text,
-  o.voided,
-  o.voided_by,
-  o.date_voided,
-  o.void_reason,
-  o.date_created,
-  o.created_at,
-  o.updated_at
-FROM obs o
-  JOIN encounter e
-    ON o.encounter_id = e.encounter_id
-  JOIN person p
-    ON e.patient_id = p.person_id 
-WHERE concept_id = 6987 
-AND o.updated_at >= '${upd_medicationAdherences}'
-
-
-</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>80</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>remove_%</name>
-    <type>ReplaceString</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <fields>
-      <field>
-        <in_stream_name>value_text</in_stream_name>
-        <out_stream_name>cleaned_value_text</out_stream_name>
-        <use_regex>no</use_regex>
-        <replace_string>%</replace_string>
-        <replace_by_string/>
-        <set_empty_string>N</set_empty_string>
-        <replace_field_by_string/>
-        <whole_word>no</whole_word>
-        <case_sensitive>no</case_sensitive>
-        <is_unicode>no</is_unicode>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>448</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>if_value_numeric_isnull_put_value_text</name>
-    <type>Calculator</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <failIfNoFile>Y</failIfNoFile>
-    <calculation>
-      <field_name>adherence</field_name>
-      <calc_type>NVL</calc_type>
-      <field_a>value_numeric</field_a>
-      <field_b>cleaned_value_text</field_b>
-      <field_c/>
-      <value_type>Number</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask/>
-      <decimal_symbol/>
-      <grouping_symbol/>
-      <currency_symbol/>
-    </calculation>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>704</xloc>
-      <yloc>240</yloc>
+      <xloc>656</xloc>
+      <yloc>288</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 09:36:41.929</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/01 19:55:35.902</modified_date>
+    <modified_date>2020/02/23 15:44:18.251</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -498,7 +498,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds</database>
+    <database>rds_small_site</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -555,6 +555,16 @@
   <order>
     <hop>
       <from>obs - diagnosis</from>
+      <to>primary_diag</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>primary_diag</from>
+      <to>secondary_diag</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>secondary_diag</from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
@@ -577,35 +587,65 @@
       <schema/>
       <table>diagnosis</table>
       <key>
-        <name>encounter_id</name>
-        <field>encounter_id</field>
+        <name>obs_id</name>
+        <field>diagnosis_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>encounter_id</name>
-        <rename>encounter_id</rename>
-        <update>Y</update>
+        <name>diagnosis_id</name>
+        <rename>obs_id</rename>
+        <update>N</update>
       </value>
       <value>
         <name>primary_diagnosis</name>
-        <rename>primary_diagnosis</rename>
+        <rename>master_def_primary_diagnosis</rename>
         <update>Y</update>
       </value>
       <value>
         <name>secondary_diagnosis</name>
-        <rename>secondary_diagnosis</rename>
+        <rename>master_def_secondary_diagnosis</rename>
         <update>Y</update>
       </value>
       <value>
         <name>app_date_created</name>
-        <rename>encounter_datetime</rename>
+        <rename>date_created</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>creator</name>
+        <rename>creator</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>app_date_updated</name>
+        <rename>date_created</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>voided</name>
+        <rename>voided</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>voided_by</name>
+        <rename>voided_by</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>voided_date</name>
+        <rename>date_voided</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>void_reason</name>
+        <rename>void_reason</rename>
         <update>Y</update>
       </value>
       <value>
         <name>created_at</name>
         <rename>created_at</rename>
-        <update>Y</update>
+        <update>N</update>
       </value>
       <value>
         <name>updated_at</name>
@@ -628,6 +668,60 @@
     </GUI>
   </step>
   <step>
+    <name>primary_diag</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>primary_diagnosis</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>master_def_primary_diagnosis</rename>
+        <default/>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>288</xloc>
+      <yloc>208</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
     <name>obs - diagnosis</name>
     <type>TableInput</type>
     <description/>
@@ -639,22 +733,23 @@
       <schema_name/>
     </partitioning>
     <connection>RDS</connection>
-    <sql>SELECT en.encounter_id
-	, max(case when c.short_name = 'primary_diagnosis' then ob.value_coded end) as primary_diagnosis
-    , max(case when c.short_name = 'secondary_diagnosis' then ob.value_coded end) as secondary_diagnosis
-    , max(en.encounter_datetime) encounter_datetime
-    , max(en.created_at) created_at
-    , max(en.updated_at) updated_at
-FROM obs ob
-JOIN encounter en
-	ON ob.encounter_id = en.encounter_id
-JOIN person p
-        ON en.patient_id = p.person_id
-LEFT JOIN concept c
-	on ob.concept_id = c.concept_id
-WHERE ob.concept_id IN (6542,6543)
-	and en.updated_at > '${upd_diagnosis}'
-group by en.encounter_id
+    <sql>SELECT ob.obs_id, 
+       ob.encounter_id,
+       max(case WHEN ob.concept_id = 6542 then ob.value_coded end) as primary_diagnosis, 
+       max(case WHEN ob.concept_id = 6543 then ob.value_coded end) as secondary_diagnosis,
+       'concept_name' as concept_name,
+       ob.voided, 
+       ob.voided_by,
+       ob.void_reason, 
+       ob.date_voided, 
+       ob.creator,
+       ob.date_created,
+       ob.updated_at,
+       ob.created_at
+       FROM obs ob
+       WHERE ob.concept_id IN (6542,6543)
+       AND ob.updated_at > '${upd_diagnosis}'
+    GROUP BY ob.encounter_id;
 
 </sql>
     <limit>0</limit>
@@ -672,6 +767,60 @@ group by en.encounter_id
     </remotesteps>
     <GUI>
       <xloc>112</xloc>
+      <yloc>208</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>secondary_diag</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>secondary_diagnosis</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>master_def_secondary_diagnosis</rename>
+        <default/>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>432</xloc>
       <yloc>208</yloc>
       <draw>Y</draw>
     </GUI>
