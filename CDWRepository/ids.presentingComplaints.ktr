@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 16:41:59.951</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/23 15:57:48.582</modified_date>
+    <modified_date>2020/02/24 17:11:32.304</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -439,7 +439,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>ids</database>
+    <database>ids_small_site</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -498,7 +498,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds</database>
+    <database>rds_small_site</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -767,8 +767,8 @@ WHERE en.encounter_type = 122
       </output>
     </remotesteps>
     <GUI>
-      <xloc>144</xloc>
-      <yloc>208</yloc>
+      <xloc>160</xloc>
+      <yloc>224</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

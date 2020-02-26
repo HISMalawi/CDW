@@ -3,10 +3,10 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>ids</database>
+    <database>ids_small_site</database>
     <port>3306</port>
     <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4bb18bd63c99dbdde</password>
+    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>

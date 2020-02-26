@@ -7,7 +7,7 @@
   <created_user>-</created_user>
   <created_date>2019/12/13 06:16:11.606</created_date>
   <modified_user>-</modified_user>
-  <modified_date>2020/02/24 00:02:01.425</modified_date>
+  <modified_date>2020/02/26 04:35:05.202</modified_date>
   <parameters>
     </parameters>
   <connection>
@@ -15,7 +15,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>ids</database>
+    <database>ids_small_site</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
