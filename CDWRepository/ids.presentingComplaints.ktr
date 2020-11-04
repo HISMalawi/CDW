@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 16:41:59.951</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/24 17:11:32.304</modified_date>
+    <modified_date>2020/03/13 09:31:32.339</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -447,10 +447,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -506,10 +502,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -587,14 +579,14 @@
       <schema/>
       <table>presenting_complaints</table>
       <key>
-        <name>presenting_complaint_id</name>
+        <name>obs_id</name>
         <field>presenting_complaint_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
         <name>presenting_complaint_id</name>
-        <rename>presenting_complaint_id</rename>
+        <rename>obs_id</rename>
         <update>Y</update>
       </value>
       <value>
@@ -733,7 +725,7 @@
       <schema_name/>
     </partitioning>
     <connection>RDS</connection>
-    <sql>SELECT ob.obs_id as presenting_complaint_id
+    <sql>SELECT ob.obs_id
 	, ob.concept_id
     , ob.encounter_id,
      'concept_name' as concept_name
@@ -767,7 +759,7 @@ WHERE en.encounter_type = 122
       </output>
     </remotesteps>
     <GUI>
-      <xloc>160</xloc>
+      <xloc>128</xloc>
       <yloc>224</yloc>
       <draw>Y</draw>
     </GUI>

@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2020/02/12 15:04:48.701</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/15 02:28:59.367</modified_date>
+    <modified_date>2020/10/14 22:06:32.796</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -447,10 +447,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -507,10 +503,6 @@
     <index_tablespace/>
     <attributes>
       <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
-      <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
       </attribute>
@@ -559,11 +551,75 @@
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>drug_id</from>
+      <from>medication_end_date</from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
+    <hop>
+      <from>drug_id</from>
+      <to>Call Pill Count procedure</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>days_all_pills_to_last</from>
+      <to>medication_end_date</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Call Pill Count procedure</from>
+      <to>days_all_pills_to_last</to>
+      <enabled>Y</enabled>
+    </hop>
   </order>
+  <step>
+    <name>Call Pill Count procedure</name>
+    <type>DBProc</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <procedure>drug_pill_count</procedure>
+    <lookup>
+      <arg>
+        <name>person_id</name>
+        <direction>IN</direction>
+        <type>BigNumber</type>
+      </arg>
+      <arg>
+        <name>drug_inventory_id</name>
+        <direction>IN</direction>
+        <type>Integer</type>
+      </arg>
+      <arg>
+        <name>start_date</name>
+        <direction>IN</direction>
+        <type>Timestamp</type>
+      </arg>
+    </lookup>
+    <result>
+      <name>pillcount</name>
+      <type>Integer</type>
+    </result>
+    <auto_commit>Y</auto_commit>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>688</xloc>
+      <yloc>256</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step>
     <name>Insert / update</name>
     <type>InsertUpdate</type>
@@ -609,7 +665,7 @@
       </value>
       <value>
         <name>end_date</name>
-        <rename>auto_expire_date</rename>
+        <rename>medication_end_date</rename>
         <update>Y</update>
       </value>
       <value>
@@ -667,9 +723,83 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>768</xloc>
-      <yloc>112</yloc>
+      <xloc>2048</xloc>
+      <yloc>256</yloc>
       <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>days_all_pills_to_last</name>
+    <type>Formula</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <formula>
+      <field_name>days_all_pills_to_last</field_name>
+      <formula_string>([quantity] + [pillcount])/[equivalent_daily_dose]</formula_string>
+      <value_type>Number</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <replace_field/>
+    </formula>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1120</xloc>
+      <yloc>256</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>days_pills_to_last</name>
+    <type>Calculator</type>
+    <description/>
+    <distribute>N</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>days_all_pills_to_last</field_name>
+      <calc_type>DIVIDE</calc_type>
+      <field_a>total_pills</field_a>
+      <field_b>equivalent_daily_dose</field_b>
+      <field_c/>
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1312</xloc>
+      <yloc>560</yloc>
+      <draw>N</draw>
     </GUI>
   </step>
   <step>
@@ -721,8 +851,49 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>608</xloc>
-      <yloc>112</yloc>
+      <xloc>352</xloc>
+      <yloc>256</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>medication_end_date</name>
+    <type>Calculator</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>medication_end_date</field_name>
+      <calc_type>ADD_DAYS</calc_type>
+      <field_a>start_date</field_a>
+      <field_b>days_all_pills_to_last</field_b>
+      <field_c/>
+      <value_type>Timestamp</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1504</xloc>
+      <yloc>256</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -738,11 +909,14 @@
       <schema_name/>
     </partitioning>
     <connection>RDS</connection>
-    <sql>SELECT o.order_id,
+    <sql>SELECT DISTINCT o.order_id,
     'drug' as master_def_entity_name,
 	o.encounter_id,
 	d.drug_inventory_id,
-	o.start_date,
+    IF(LENGTH(IF(d.equivalent_daily_dose = 0, 1,d.equivalent_daily_dose)) IS NULL,1,(IF(d.equivalent_daily_dose = 0, 1,d.equivalent_daily_dose))) equivalent_daily_dose,
+    IF(LENGTH(IF(d.quantity = 0, 1,d.quantity)) IS NULL,1,(IF(d.quantity = 0, 1,d.quantity))) quantity,
+    o.start_date,
+    p.person_id,
 	o.auto_expire_date, 
 	o.instructions,
     o.voided, 
@@ -761,6 +935,7 @@ FROM orders o
     ON en.patient_id = p.person_id
 WHERE o.order_type_id = 1   
 AND o.updated_at >= '${upd_prescription}'
+
 </sql>
     <limit>0</limit>
     <lookup/>
@@ -776,9 +951,50 @@ AND o.updated_at >= '${upd_prescription}'
       </output>
     </remotesteps>
     <GUI>
-      <xloc>416</xloc>
-      <yloc>112</yloc>
+      <xloc>176</xloc>
+      <yloc>256</yloc>
       <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>total pills</name>
+    <type>Calculator</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>total_pills</field_name>
+      <calc_type>ADD</calc_type>
+      <field_a>quantity</field_a>
+      <field_b>pillcount</field_b>
+      <field_c/>
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>976</xloc>
+      <yloc>416</yloc>
+      <draw>N</draw>
     </GUI>
   </step>
   <step_error_handling>

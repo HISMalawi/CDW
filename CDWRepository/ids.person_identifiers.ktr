@@ -1,6 +1,6 @@
 <transformation>
   <info>
-    <name>ids.pregnantStatuses</name>
+    <name>ids.person_identifiers</name>
     <description/>
     <extended_description/>
     <trans_version/>
@@ -426,10 +426,10 @@
     <clusterschemas>
     </clusterschemas>
     <created_user>-</created_user>
-    <created_date>2019/12/14 16:25:17.306</created_date>
+    <created_date>2020/11/04 10:01:35.010</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/05/29 16:48:18.813</modified_date>
-    <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
+    <modified_date>2020/11/04 10:41:14.903</modified_date>
+    <key_for_session_key/>
     <is_key_private>N</is_key_private>
   </info>
   <notepads>
@@ -546,21 +546,116 @@
   </connection>
   <order>
     <hop>
-      <from>obs - pregnant statuses</from>
-      <to>value_coded</to>
+      <from>Person Identifiers</from>
+      <to>identifier_type_lookup</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>value_coded</from>
-      <to>concept_id</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>concept_id</from>
+      <from>identifier_type_lookup</from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
   </order>
+  <step>
+    <name>Person Identifiers</name>
+    <type>TableInput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <sql>SELECT patient_identifier_id,
+       'person_identifier' openmrs_entity_name, 
+       patient_id, 
+       identifier, 
+       identifier_type, 
+       creator,
+	   date_created,
+	   voided,
+	   voided_by,
+	   date_voided,
+	   void_reason,
+	   created_at,
+	   updated_at
+FROM patient_identifier;
+</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>192</xloc>
+      <yloc>272</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>identifier_type_lookup</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>identifier_type</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>openmrs_entity_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>master_def_identifier_type_id</rename>
+        <default/>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>480</xloc>
+      <yloc>272</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step>
     <name>Insert / update</name>
     <type>InsertUpdate</type>
@@ -577,31 +672,46 @@
     <update_bypassed>N</update_bypassed>
     <lookup>
       <schema/>
-      <table>pregnant_statuses</table>
+      <table>identifiers</table>
       <key>
-        <name>obs_id</name>
-        <field>pregnant_status_id</field>
+        <name>patient_identifier_id</name>
+        <field>patient_identifier_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>pregnant_status_id</name>
-        <rename>obs_id</rename>
+        <name>patient_identifier_id</name>
+        <rename>patient_identifier_id</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>person_id</name>
+        <rename>patient_id</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>concept_id</name>
-        <rename>lkup_concept_id</rename>
+        <name>identifier</name>
+        <rename>identifier</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>encounter_id</name>
-        <rename>encounter_id</rename>
+        <name>identifier_type</name>
+        <rename>master_def_identifier_type_id</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>value_coded</name>
-        <rename>lkup_value_coded</rename>
+        <name>creator</name>
+        <rename>creator</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>app_date_created</name>
+        <rename>date_created</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>app_date_updated</name>
+        <rename>date_created</rename>
         <update>Y</update>
       </value>
       <value>
@@ -625,16 +735,6 @@
         <update>Y</update>
       </value>
       <value>
-        <name>app_date_created</name>
-        <rename>date_created</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>app_date_updated</name>
-        <rename>date_updated</rename>
-        <update>Y</update>
-      </value>
-      <value>
         <name>created_at</name>
         <rename>created_at</rename>
         <update>Y</update>
@@ -654,168 +754,8 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>560</xloc>
-      <yloc>160</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>concept_id</name>
-    <type>DBLookup</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
-    <lookup>
-      <schema/>
-      <table>master_definitions</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
-      <key>
-        <name>concept_id</name>
-        <field>openmrs_metadata_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>concept_name</name>
-        <field>openmrs_entity_name</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <value>
-        <name>master_definition_id</name>
-        <rename>lkup_concept_id</rename>
-        <default>1067</default>
-        <type>Integer</type>
-      </value>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>400</xloc>
-      <yloc>160</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>obs - pregnant statuses</name>
-    <type>TableInput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>RDS</connection>
-    <sql>SELECT o.obs_id
-	, o.concept_id
-    , 'concept_name' as concept_name
-    , o.encounter_id
-    , 'Pregnant?' as definition
-    , o.voided
-    , o.voided_by
-    , o.date_voided	
-    , o.void_reason
-    , o.date_created
-    , null date_updated
-    , o.created_at
-    , o.updated_at
-	, o.value_coded
-FROM obs o
-   JOIN encounter e
-      ON o.encounter_id = e.encounter_id
-   JOIN person p
-      ON e.patient_id = p.person_id
-WHERE (o.concept_id in (1755,6131) 
-AND o.updated_at >= '${upd_pregnantStatuses}')</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>96</xloc>
-      <yloc>160</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>value_coded</name>
-    <type>DBLookup</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
-    <lookup>
-      <schema/>
-      <table>master_definitions</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
-      <key>
-        <name>value_coded</name>
-        <field>openmrs_metadata_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>concept_name</name>
-        <field>openmrs_entity_name</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <value>
-        <name>master_definition_id</name>
-        <rename>lkup_value_coded</rename>
-        <default>1067</default>
-        <type>Integer</type>
-      </value>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>272</xloc>
-      <yloc>160</yloc>
+      <xloc>800</xloc>
+      <yloc>272</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

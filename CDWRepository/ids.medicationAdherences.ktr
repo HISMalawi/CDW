@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 11:39:49.780</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/21 14:22:17.461</modified_date>
+    <modified_date>2020/06/20 19:43:09.355</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -439,7 +439,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>ids_small_site</database>
+    <database>ids</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -447,10 +447,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -498,7 +494,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds_small_site</database>
+    <database>rds</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -506,10 +502,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -604,7 +596,7 @@
       </value>
       <value>
         <name>medication_dispensation_id</name>
-        <rename>medication_prescription_id</rename>
+        <rename>order_id</rename>
         <update>Y</update>
       </value>
       <value>
@@ -694,7 +686,7 @@
       <fail_on_multiple>N</fail_on_multiple>
       <eat_row_on_failure>N</eat_row_on_failure>
       <key>
-        <name>drug_dispensed</name>
+        <name>order_id_1</name>
         <field>medication_prescription_id</field>
         <condition>=</condition>
         <name2/>
@@ -721,6 +713,47 @@
     </GUI>
   </step>
   <step>
+    <name>if_value_numeric_isnull_put_value_text</name>
+    <type>Calculator</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>adherence</field_name>
+      <calc_type>NVL</calc_type>
+      <field_a>value_numeric</field_a>
+      <field_b>cleaned_value_text</field_b>
+      <field_c/>
+      <value_type>Number</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>704</xloc>
+      <yloc>240</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
     <name>medication_adherences</name>
     <type>TableInput</type>
     <description/>
@@ -734,8 +767,8 @@
     <connection>RDS</connection>
     <sql>SELECT
   o.obs_id,
-  o.order_id as medication_prescription_id,
-  o.order_id as drug_dispensed,
+  o.order_id,
+  o.order_id,
   o.order_id,
   o.value_numeric,
   o.value_text,
@@ -750,7 +783,9 @@ FROM obs o
   JOIN encounter e
     ON o.encounter_id = e.encounter_id
   JOIN person p
-    ON e.patient_id = p.person_id 
+    ON e.patient_id = p.person_id
+  JOIN drug_order do  
+	ON o.order_id = do.order_id
 WHERE concept_id = 6987 
 AND o.updated_at >= '${upd_medicationAdherences}'
 
@@ -810,47 +845,6 @@ AND o.updated_at >= '${upd_medicationAdherences}'
     </remotesteps>
     <GUI>
       <xloc>448</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>if_value_numeric_isnull_put_value_text</name>
-    <type>Calculator</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <failIfNoFile>Y</failIfNoFile>
-    <calculation>
-      <field_name>adherence</field_name>
-      <calc_type>NVL</calc_type>
-      <field_a>value_numeric</field_a>
-      <field_b>cleaned_value_text</field_b>
-      <field_c/>
-      <value_type>Number</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask/>
-      <decimal_symbol/>
-      <grouping_symbol/>
-      <currency_symbol/>
-    </calculation>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>704</xloc>
       <yloc>240</yloc>
       <draw>Y</draw>
     </GUI>

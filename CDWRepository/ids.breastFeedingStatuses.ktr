@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/13 16:49:57.521</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/12 11:48:40.487</modified_date>
+    <modified_date>2020/05/29 16:55:42.408</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -439,7 +439,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>ids</database>
+    <database>ids_small_site</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -447,10 +447,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -498,7 +494,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds</database>
+    <database>rds_small_site</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -506,10 +502,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -554,12 +546,17 @@
   </connection>
   <order>
     <hop>
-      <from>obs - breastfeeding</from>
-      <to>get master def id</to>
+      <from>value_coded</from>
+      <to>concept_id</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>get master def id</from>
+      <from>obs - breastfeeding</from>
+      <to>value_coded</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>concept_id</from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
@@ -594,7 +591,7 @@
       </value>
       <value>
         <name>concept_id</name>
-        <rename>concept_id</rename>
+        <rename>lkup_concept_id</rename>
         <update>Y</update>
       </value>
       <value>
@@ -657,55 +654,7 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>544</xloc>
-      <yloc>176</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>get master def id</name>
-    <type>DBLookup</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
-    <lookup>
-      <schema/>
-      <table>master_definitions</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
-      <key>
-        <name>concept_id</name>
-        <field>openmrs_metadata_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <value>
-        <name>master_definition_id</name>
-        <rename>lkup_value_coded</rename>
-        <default>1067</default>
-        <type>Integer</type>
-      </value>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>352</xloc>
+      <xloc>720</xloc>
       <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
@@ -727,6 +676,7 @@
 , o.concept_id
 , o.encounter_id
 , o.value_coded
+, 'concept_name' as concept_name
 , o.voided
 , o.voided_by
 , o.date_voided
@@ -761,6 +711,114 @@ AND o.updated_at > '${upd_breastFeedingStatus}'
     </remotesteps>
     <GUI>
       <xloc>192</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>concept_id</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>concept_id</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>lkup_concept_id</rename>
+        <default>1067</default>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>544</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>value_coded</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>value_coded</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>lkup_value_coded</rename>
+        <default>1067</default>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>400</xloc>
       <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>

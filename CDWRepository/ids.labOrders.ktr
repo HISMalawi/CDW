@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 19:24:06.323</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/01 20:01:22.838</modified_date>
+    <modified_date>2020/03/13 11:03:18.553</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -439,7 +439,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>ids</database>
+    <database>ids_small_site</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -447,10 +447,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -498,7 +494,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds</database>
+    <database>rds_small_site</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -506,10 +502,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -577,24 +569,24 @@
       <schema/>
       <table>lab_orders</table>
       <key>
-        <name>lab_order_id</name>
+        <name>order_id</name>
         <field>lab_order_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
         <name>lab_order_id</name>
-        <rename>lab_order_id</rename>
-        <update>Y</update>
+        <rename>order_id</rename>
+        <update>N</update>
       </value>
       <value>
         <name>tracking_number</name>
-        <rename>tracking_number</rename>
+        <rename>accession_number</rename>
         <update>Y</update>
       </value>
       <value>
         <name>order_date</name>
-        <rename>order_date</rename>
+        <rename>start_date</rename>
         <update>Y</update>
       </value>
       <value>
@@ -674,9 +666,9 @@
       <schema_name/>
     </partitioning>
     <connection>RDS</connection>
-    <sql>select o.order_id as lab_order_id
-	, o.accession_number as tracking_number
-    , o.start_date as order_date
+    <sql>select o.order_id
+	, o.accession_number
+    , o.start_date
     , o.encounter_id
     , o.creator
     , o.voided

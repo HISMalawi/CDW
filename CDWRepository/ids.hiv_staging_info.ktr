@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2020/02/18 20:46:49.756</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/23 20:21:44.726</modified_date>
+    <modified_date>2020/06/20 19:32:36.098</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -439,7 +439,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>ids_small_site</database>
+    <database>ids</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -447,10 +447,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -498,7 +494,7 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds_small_site</database>
+    <database>rds</database>
     <port>3306</port>
     <username>root</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
@@ -506,10 +502,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -590,6 +582,92 @@
     </hop>
   </order>
   <step>
+    <name>Execute SQL script</name>
+    <type>ExecSQL</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <execute_each_row>N</execute_each_row>
+    <single_statement>N</single_statement>
+    <replace_variables>N</replace_variables>
+    <quoteString>N</quoteString>
+    <sql>DROP TABLE IF EXISTS temp_earliest_start_date;
+CREATE TABLE IF NOT EXISTS temp_earliest_start_date (
+             patient_id BIGINT,
+             date_enrolled DATE NOT NULL,
+             earliest_start_date DATETIME,
+             birthdate DATE DEFAULT NULL,
+             birthdate_estimated BOOLEAN,
+             death_date DATE,
+             gender VARCHAR(32),
+             age_at_initiation INT DEFAULT NULL,
+             age_in_days INT DEFAULT NULL,
+             PRIMARY KEY(patient_id, date_enrolled)
+          ) ENGINE=INNODB 
+         PARTITION BY HASH(YEAR(date_enrolled))
+         PARTITIONS 12;
+
+CREATE INDEX patient_id_index ON temp_earliest_start_date (patient_id);
+CREATE INDEX date_enrolled_index ON temp_earliest_start_date (date_enrolled);
+CREATE INDEX patient_id__date_enrolled_index ON temp_earliest_start_date (patient_id, date_enrolled);
+CREATE INDEX earliest_start_date_index ON temp_earliest_start_date (earliest_start_date);
+CREATE INDEX earliest_start_date__date_enrolled_index ON temp_earliest_start_date (earliest_start_date, date_enrolled);
+
+INSERT INTO temp_earliest_start_date
+          select
+            `p`.`patient_id` AS `patient_id`,
+            cast(patient_date_enrolled(`p`.`patient_id`) as date) AS `date_enrolled`,
+            date_antiretrovirals_started(`p`.`patient_id`, min(`s`.`start_date`)) AS `earliest_start_date`,
+            `pe`.`birthdate`,
+            `pe`.`birthdate_estimated`,
+            `person`.`death_date` AS `death_date`,
+            `pe`.`gender` AS `gender`,
+            (select timestampdiff(year, `pe`.`birthdate`, min(`s`.`start_date`))) AS `age_at_initiation`,
+            (select timestampdiff(day, `pe`.`birthdate`, min(`s`.`start_date`))) AS `age_in_days`
+          from
+            ((`patient_program` `p`
+            left join `person` `pe` ON ((`pe`.`person_id` = `p`.`patient_id`))
+            left join `patient_state` `s` ON ((`p`.`patient_program_id` = `s`.`patient_program_id`)))
+            left join `person` ON ((`person`.`person_id` = `p`.`patient_id`)))
+          where
+            ((`p`.`voided` = 0)
+                and (`s`.`voided` = 0)
+                and (`p`.`program_id` = 1)
+                and (`s`.`state` = 7))
+                and (DATE(`s`.`start_date`) >= '1900-01-1 00:00:00')
+          group by `p`.`patient_id`
+          HAVING date_enrolled IS NOT NULL;
+
+
+</sql>
+    <set_params>N</set_params>
+    <insert_field/>
+    <update_field/>
+    <delete_field/>
+    <read_field/>
+    <arguments>
+    </arguments>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>192</xloc>
+      <yloc>304</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
     <name>Insert / update</name>
     <type>InsertUpdate</type>
     <description/>
@@ -612,12 +690,6 @@
         <condition>=</condition>
         <name2/>
       </key>
-      <key>
-        <name>start_date</name>
-        <field>start_date</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
       <value>
         <name>person_id</name>
         <rename>patient_id</rename>
@@ -625,7 +697,7 @@
       </value>
       <value>
         <name>start_date</name>
-        <rename>start_date</rename>
+        <rename>earliest_start_date</rename>
         <update>Y</update>
       </value>
       <value>
@@ -716,39 +788,26 @@
    patient_program pp 
 ON p.patient_id = pp.patient_id
  JOIN patient_state ps 
-ON pp.patient_program_id = ps.patient_program_id 
+ON pp.patient_program_id = ps.patient_program_id
+ JOIN person pr
+ON p.patient_id = pr.person_id
 WHERE pp.program_id = 1 
 AND p.voided = 0 
 AND pp.voided = 0  
 AND ps.state = 7 
-AND ps.voided = 0) as patient_id 
+AND ps.voided = 0) as patient_id
 
 LEFT JOIN
 
-(SELECT patient_id, MIN(start_date) start_date 
-FROM patient_state s 
-JOIN patient_program p 
-ON p.patient_program_id = s.patient_program_id 
-WHERE s.voided = 0
-   AND s.state = 7 
-   AND p.program_id = 1
-GROUP BY patient_id) 
-   AS start_date 
-ON patient_id.patient_id = start_date.patient_id
+(SELECT patient_id, date_enrolled, earliest_start_date, age_at_initiation, age_in_days
+ FROM temp_earliest_start_date) 
+   AS dates_n_ages 
+ON patient_id.patient_id = dates_n_ages.patient_id
 
-LEFT JOIN
-
-(SELECT person_id, MIN(DATE(obs_datetime)) as date_enrolled 
-FROM obs WHERE
-concept_id = 2834 AND value_drug IN (SELECT drug_id
-FROM drug d WHERE d.concept_id IN 
-(SELECT cs.concept_id FROM concept_set cs WHERE cs.concept_set = 1085))
-GROUP BY person_id) as date_enrolled
-ON patient_id.patient_id = date_enrolled.person_id
 
 LEFT JOIN 
 
-(SELECT patient_id, re_initiated_check(patient_id, date_enrolled) re_initiated,2280 as transfer_in FROM temp_earliest_start_date
+(SELECT patient_id, IF(re_initiated_check(patient_id, date_enrolled) = 'n/a',2441,re_initiated_check(patient_id, date_enrolled)) re_initiated,2280 as transfer_in FROM temp_earliest_start_date
 WHERE DATE(date_enrolled) != DATE(earliest_start_date)
 GROUP BY patient_id
 HAVING re_initiated != 'Re-initiated') AS transfer_in
@@ -756,7 +815,7 @@ ON patient_id.patient_id = transfer_in.patient_id
 
 LEFT JOIN
 
-(SELECT patient_id, re_initiated_check(patient_id, date_enrolled) as re_initiated, 2280 as re_initiated_code
+(SELECT patient_id, IF(re_initiated_check(patient_id, date_enrolled) = 'n/a',2441,re_initiated_check(patient_id, date_enrolled)) as re_initiated, 2280 as re_initiated_code
   FROM temp_earliest_start_date
   WHERE DATE(date_enrolled) != DATE(earliest_start_date)
   GROUP BY patient_id
@@ -1089,88 +1148,6 @@ WHERE updated_at >= '${upd_hiv_staging_info}'
     <GUI>
       <xloc>560</xloc>
       <yloc>48</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Execute SQL script</name>
-    <type>ExecSQL</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>RDS</connection>
-    <execute_each_row>N</execute_each_row>
-    <single_statement>N</single_statement>
-    <replace_variables>N</replace_variables>
-    <quoteString>N</quoteString>
-    <sql>DROP TABLE IF EXISTS temp_earliest_start_date;
-CREATE TABLE IF NOT EXISTS temp_earliest_start_date (
-             patient_id BIGINT PRIMARY KEY,
-             date_enrolled DATE NOT NULL,
-             earliest_start_date DATETIME,
-             birthdate DATE DEFAULT NULL,
-             birthdate_estimated BOOLEAN,
-             death_date DATE,
-             gender VARCHAR(32),
-             age_at_initiation INT DEFAULT NULL,
-             age_in_days INT DEFAULT NULL
-          ) ENGINE=MEMORY;
-CREATE INDEX patient_id_index ON temp_earliest_start_date (patient_id);
-CREATE INDEX date_enrolled_index ON temp_earliest_start_date (date_enrolled);
-CREATE INDEX patient_id__date_enrolled_index ON temp_earliest_start_date (patient_id, date_enrolled);
-CREATE INDEX earliest_start_date_index ON temp_earliest_start_date (earliest_start_date);
-CREATE INDEX earliest_start_date__date_enrolled_index ON temp_earliest_start_date (earliest_start_date, date_enrolled);
-
-INSERT INTO temp_earliest_start_date
-          select
-            `p`.`patient_id` AS `patient_id`,
-            cast(patient_date_enrolled(`p`.`patient_id`) as date) AS `date_enrolled`,
-            date_antiretrovirals_started(`p`.`patient_id`, min(`s`.`start_date`)) AS `earliest_start_date`,
-            `pe`.`birthdate`,
-            `pe`.`birthdate_estimated`,
-            `person`.`death_date` AS `death_date`,
-            `pe`.`gender` AS `gender`,
-            (select timestampdiff(year, `pe`.`birthdate`, min(`s`.`start_date`))) AS `age_at_initiation`,
-            (select timestampdiff(day, `pe`.`birthdate`, min(`s`.`start_date`))) AS `age_in_days`
-          from
-            ((`patient_program` `p`
-            left join `person` `pe` ON ((`pe`.`person_id` = `p`.`patient_id`))
-            left join `patient_state` `s` ON ((`p`.`patient_program_id` = `s`.`patient_program_id`)))
-            left join `person` ON ((`person`.`person_id` = `p`.`patient_id`)))
-          where
-            ((`p`.`voided` = 0)
-                and (`s`.`voided` = 0)
-                and (`p`.`program_id` = 1)
-                and (`s`.`state` = 7))
-                and (DATE(`s`.`start_date`) >= '1900-01-1 00:00:00')
-          group by `p`.`patient_id`
-          HAVING date_enrolled IS NOT NULL;
-
-
-</sql>
-    <set_params>N</set_params>
-    <insert_field/>
-    <update_field/>
-    <delete_field/>
-    <read_field/>
-    <arguments>
-    </arguments>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>192</xloc>
-      <yloc>304</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

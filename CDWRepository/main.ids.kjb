@@ -7,7 +7,7 @@
   <created_user>-</created_user>
   <created_date>2019/12/13 06:16:11.606</created_date>
   <modified_user>-</modified_user>
-  <modified_date>2020/02/26 04:35:05.202</modified_date>
+  <modified_date>2020/10/14 22:20:31.481</modified_date>
   <parameters>
     </parameters>
   <connection>
@@ -15,18 +15,14 @@
     <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>ids_small_site</database>
+    <database>ids</database>
     <port>3306</port>
     <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <password>Encrypted 2be98afc86aa7f2e48f39ba71f2b2a489</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -479,8 +475,8 @@
       <parallel>Y</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>176</xloc>
-      <yloc>320</yloc>
+      <xloc>144</xloc>
+      <yloc>432</yloc>
       <attributes_kjc/>
     </entry>
     <entry>
@@ -1400,14 +1396,14 @@ delete from people;
       <clear_rows>N</clear_rows>
       <clear_files>N</clear_files>
       <set_logfile>N</set_logfile>
-      <logfile/>
-      <logext/>
+      <logfile>C:\pdi-ce-8.3.0.0-371\data-integration\medication_prescription</logfile>
+      <logext>log</logext>
       <add_date>N</add_date>
       <add_time>N</add_time>
-      <loglevel>Basic</loglevel>
+      <loglevel>Rowlevel</loglevel>
       <cluster>N</cluster>
       <slave_server_name/>
-      <set_append_logfile>N</set_append_logfile>
+      <set_append_logfile>Y</set_append_logfile>
       <wait_until_finished>Y</wait_until_finished>
       <follow_abort_remote>N</follow_abort_remote>
       <create_parent_folder>N</create_parent_folder>
@@ -1536,8 +1532,8 @@ delete from people;
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>1392</xloc>
-      <yloc>272</yloc>
+      <xloc>1376</xloc>
+      <yloc>224</yloc>
       <attributes_kjc/>
     </entry>
     <entry>
@@ -1576,7 +1572,7 @@ delete from people;
       <draw>Y</draw>
       <nr>0</nr>
       <xloc>480</xloc>
-      <yloc>720</yloc>
+      <yloc>752</yloc>
       <attributes_kjc/>
     </entry>
     <entry>
@@ -1618,20 +1614,50 @@ delete from people;
       <yloc>800</yloc>
       <attributes_kjc/>
     </entry>
+    <entry>
+      <name>Lab_test_results</name>
+      <description/>
+      <type>TRANS</type>
+      <attributes/>
+      <specification_method>rep_name</specification_method>
+      <trans_object_id/>
+      <filename/>
+      <transname>ids.lab_test_results</transname>
+      <directory>/</directory>
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>N</clear_rows>
+      <clear_files>N</clear_files>
+      <set_logfile>N</set_logfile>
+      <logfile/>
+      <logext/>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster>
+      <slave_server_name/>
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration>Pentaho local</run_configuration>
+      <parameters>
+        <pass_all_parameters>Y</pass_all_parameters>
+      </parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>1</nr>
+      <xloc>240</xloc>
+      <yloc>160</yloc>
+      <attributes_kjc/>
+    </entry>
   </entries>
   <hops>
     <hop>
       <from>people</from>
       <to>person_names</to>
-      <from_nr>0</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>N</unconditional>
-    </hop>
-    <hop>
-      <from>Calc Last update Date</from>
-      <to>people</to>
       <from_nr>0</from_nr>
       <to_nr>0</to_nr>
       <enabled>Y</enabled>
@@ -1691,15 +1717,6 @@ delete from people;
       <enabled>N</enabled>
       <evaluation>Y</evaluation>
       <unconditional>Y</unconditional>
-    </hop>
-    <hop>
-      <from>delete all (dev purposes only)</from>
-      <to>Calc Last update Date</to>
-      <from_nr>0</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>N</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>N</unconditional>
     </hop>
     <hop>
       <from>encounters</from>
@@ -1763,15 +1780,6 @@ delete from people;
       <enabled>Y</enabled>
       <evaluation>Y</evaluation>
       <unconditional>N</unconditional>
-    </hop>
-    <hop>
-      <from>Start</from>
-      <to>Calc Last update Date</to>
-      <from_nr>0</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>Y</unconditional>
     </hop>
     <hop>
       <from>people</from>
@@ -1882,15 +1890,6 @@ delete from people;
       <unconditional>N</unconditional>
     </hop>
     <hop>
-      <from>lab_orders</from>
-      <to>Lab_test_results</to>
-      <from_nr>0</from_nr>
-      <to_nr>0</to_nr>
-      <enabled>Y</enabled>
-      <evaluation>Y</evaluation>
-      <unconditional>N</unconditional>
-    </hop>
-    <hop>
       <from>people</from>
       <to>de_identified_identifiers</to>
       <from_nr>0</from_nr>
@@ -1916,6 +1915,42 @@ delete from people;
       <enabled>Y</enabled>
       <evaluation>Y</evaluation>
       <unconditional>N</unconditional>
+    </hop>
+    <hop>
+      <from>delete all (dev purposes only)</from>
+      <to>people</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
+    <hop>
+      <from>Start</from>
+      <to>people</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>Y</unconditional>
+    </hop>
+    <hop>
+      <from>lab_orders</from>
+      <to>Lab_test_results</to>
+      <from_nr>0</from_nr>
+      <to_nr>0</to_nr>
+      <enabled>Y</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>N</unconditional>
+    </hop>
+    <hop>
+      <from>Start</from>
+      <to>Lab_test_results</to>
+      <from_nr>0</from_nr>
+      <to_nr>1</to_nr>
+      <enabled>N</enabled>
+      <evaluation>Y</evaluation>
+      <unconditional>Y</unconditional>
     </hop>
   </hops>
   <notepads>

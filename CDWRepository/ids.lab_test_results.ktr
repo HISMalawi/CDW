@@ -428,8 +428,8 @@
     <created_user>-</created_user>
     <created_date>2020/02/22 16:39:45.734</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/22 21:19:04.861</modified_date>
-    <key_for_session_key/>
+    <modified_date>2020/03/23 10:22:48.163</modified_date>
+    <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
   <notepads>
@@ -447,10 +447,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -561,8 +557,8 @@
     </hop>
   </order>
   <step>
-    <name>lims_lab_test_results</name>
-    <type>TableInput</type>
+    <name>Insert / update</name>
+    <type>InsertUpdate</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -571,36 +567,109 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>LIMs</connection>
-    <sql>SELECT st.name AS sample_type,
-       s.tracking_number,
-       tr.test_id,
-       tt.name AS test_type,
-       s.sending_facility,
-       s.target_lab AS target_lab,      
-       m.name AS measure_name,
-       tr.result AS result,
-       tr.time_entered AS time_entered,
-       tr.created_at,
-       tr.updated_at
- FROM specimen s
- JOIN tests t
- ON t.specimen_id = s.id
- JOIN test_results tr 
- ON tr.test_id = t.id
- JOIN measures m
- ON m.id = tr.measure_id
- JOIN specimen_types st
- ON s.specimen_type_id = st.id
- JOIN test_types tt 
- ON t.test_type_id = tt.id
- WHERE tr.time_entered >= '${upd_lab_test_results}'
- ORDER BY tr.time_entered</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>N</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
+    <connection>IDS</connection>
+    <commit>100</commit>
+    <update_bypassed>N</update_bypassed>
+    <lookup>
+      <schema/>
+      <table>lab_test_results</table>
+      <key>
+        <name>lab_order_id</name>
+        <field>lab_order_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>target_lab</name>
+        <field>results_test_facility</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>name_1</name>
+        <field>test_type</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>name</name>
+        <field>sample_type</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>name_2</name>
+        <field>test_measure</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>time_entered</name>
+        <field>test_result_date</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>lab_order_id</name>
+        <rename>lab_order_id</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>results_test_facility</name>
+        <rename>target_lab</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>test_type</name>
+        <rename>name_1</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>sample_type</name>
+        <rename>name</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>test_measure</name>
+        <rename>name_2</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>test_result_date</name>
+        <rename>time_entered</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>result</name>
+        <rename>result</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>app_date_created</name>
+        <rename>created_at</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>app_date_updated</name>
+        <rename>updated_at</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>created_at</name>
+        <rename>created_at</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>updated_at</name>
+        <rename>updated_at</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>sending_facility</name>
+        <rename>sending_facility</rename>
+        <update>Y</update>
+      </value>
+    </lookup>
     <attributes/>
     <cluster_schema/>
     <remotesteps>
@@ -610,7 +679,7 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>224</xloc>
+      <xloc>784</xloc>
       <yloc>128</yloc>
       <draw>Y</draw>
     </GUI>
@@ -664,8 +733,8 @@
     </GUI>
   </step>
   <step>
-    <name>Insert / update</name>
-    <type>InsertUpdate</type>
+    <name>lims_lab_test_results</name>
+    <type>TableInput</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -674,114 +743,36 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>IDS</connection>
-    <commit>100</commit>
-    <update_bypassed>N</update_bypassed>
-    <lookup>
-      <schema/>
-      <table>lab_test_results</table>
-      <key>
-        <name>lab_order_id</name>
-        <field>lab_order_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>target_lab</name>
-        <field>results_test_facility</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>test_type</name>
-        <field>test_type</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>sample_type</name>
-        <field>sample_type</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>measure_name</name>
-        <field>test_measure</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>time_entered</name>
-        <field>test_result_date</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <value>
-        <name>lab_order_id</name>
-        <rename>lab_order_id</rename>
-        <update>N</update>
-      </value>
-      <value>
-        <name>results_test_facility</name>
-        <rename>target_lab</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>test_type</name>
-        <rename>test_type</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>sample_type</name>
-        <rename>sample_type</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>test_measure</name>
-        <rename>measure_name</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>test_result_date</name>
-        <rename>time_entered</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>result</name>
-        <rename>result</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>app_date_created</name>
-        <rename>time_entered</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>lab_order_id</name>
-        <rename>lab_order_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>app_date_created</name>
-        <rename>created_at</rename>
-        <update>N</update>
-      </value>
-      <value>
-        <name>app_date_updated</name>
-        <rename>updated_at</rename>
-        <update>N</update>
-      </value>
-      <value>
-        <name>created_at</name>
-        <rename>created_at</rename>
-        <update>N</update>
-      </value>
-      <value>
-        <name>updated_at</name>
-        <rename>updated_at</rename>
-        <update>N</update>
-      </value>
-    </lookup>
+    <connection>LIMs</connection>
+    <sql>SELECT st.name,
+       s.tracking_number,
+       tr.test_id,
+       tt.name,
+       s.sending_facility,
+       s.target_lab,      
+       m.name,
+       tr.result,
+       tr.time_entered,
+       tr.created_at,
+       tr.updated_at
+ FROM specimen s
+ JOIN tests t
+ ON t.specimen_id = s.id
+ JOIN test_results tr 
+ ON tr.test_id = t.id
+ JOIN measures m
+ ON m.id = tr.measure_id
+ JOIN specimen_types st
+ ON s.specimen_type_id = st.id
+ JOIN test_types tt 
+ ON t.test_type_id = tt.id
+ WHERE tr.time_entered >= '${upd_lab_test_results}'
+ ORDER BY tr.time_entered</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
     <attributes/>
     <cluster_schema/>
     <remotesteps>
@@ -791,7 +782,7 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>784</xloc>
+      <xloc>224</xloc>
       <yloc>128</yloc>
       <draw>Y</draw>
     </GUI>
