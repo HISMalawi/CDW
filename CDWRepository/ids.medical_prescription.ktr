@@ -5,6 +5,7 @@
     <extended_description/>
     <trans_version/>
     <trans_type>Normal</trans_type>
+    <trans_status>0</trans_status>
     <directory>/</directory>
     <parameters>
     </parameters>
@@ -428,7 +429,7 @@
     <created_user>-</created_user>
     <created_date>2020/02/12 15:04:48.701</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/10/14 22:06:32.796</modified_date>
+    <modified_date>2021/06/28 10:41:18.857</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -437,12 +438,12 @@
   <connection>
     <name>IDS</name>
     <server>localhost</server>
-    <type>MYSQL</type>
+    <type>POSTGRESQL</type>
     <access>Native</access>
-    <database>ids_small_site</database>
-    <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <database>ids</database>
+    <port>5432</port>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
@@ -461,7 +462,7 @@
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
-        <attribute>3306</attribute>
+        <attribute>5432</attribute>
       </attribute>
       <attribute>
         <code>PRESERVE_RESERVED_WORD_CASE</code>
@@ -470,10 +471,6 @@
       <attribute>
         <code>QUOTE_ALL_FIELDS</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
       </attribute>
       <attribute>
         <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
@@ -491,17 +488,21 @@
   </connection>
   <connection>
     <name>RDS</name>
-    <server>localhost</server>
+    <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds_small_site</database>
+    <database>rds_temp</database>
     <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -551,23 +552,33 @@
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>medication_end_date</from>
-      <to>Insert / update</to>
+      <from>Execute SQL script</from>
+      <to>order - medical_prescription</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>drug_id</from>
-      <to>Call Pill Count procedure</to>
+      <to>days_all_pills_to_last</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>days_all_pills_to_last</from>
-      <to>medication_end_date</to>
+      <to>change_voided_to_boolean</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Call Pill Count procedure</from>
-      <to>days_all_pills_to_last</to>
+      <from>Insert / update</from>
+      <to>medication_precriptions</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>change_voided_to_boolean</from>
+      <to>lookup encounter </to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>lookup encounter </from>
+      <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
   </order>
@@ -586,7 +597,7 @@
     <procedure>drug_pill_count</procedure>
     <lookup>
       <arg>
-        <name>person_id</name>
+        <name>patient_id</name>
         <direction>IN</direction>
         <type>BigNumber</type>
       </arg>
@@ -615,7 +626,56 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>688</xloc>
+      <xloc>368</xloc>
+      <yloc>176</yloc>
+      <draw>N</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Execute SQL script</name>
+    <type>ExecSQL</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <execute_each_row>N</execute_each_row>
+    <single_statement>N</single_statement>
+    <replace_variables>N</replace_variables>
+    <quoteString>N</quoteString>
+    <sql>DROP TABLE IF EXISTS pillcount;
+
+CREATE TABLE pillcount SELECT o.order_id,
+(COALESCE(SUM(ob.value_numeric),0) + COALESCE(SUM(ob.value_text),0)) pillcount
+FROM obs ob
+JOIN drug_order do ON ob.order_id = do.order_id
+JOIN orders o ON do.order_id = o.order_id
+WHERE (ob.concept_id = 2540 OR ob.concept_id IN (SELECT concept_id FROM drug d))
+GROUP BY ob.person_id,order_id,do.drug_inventory_id
+ORDER BY order_id;
+
+ALTER TABLE pillcount add index(order_id);</sql>
+    <set_params>N</set_params>
+    <insert_field/>
+    <update_field/>
+    <delete_field/>
+    <read_field/>
+    <arguments>
+    </arguments>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>96</xloc>
       <yloc>256</yloc>
       <draw>Y</draw>
     </GUI>
@@ -638,24 +698,24 @@
       <schema/>
       <table>medication_prescriptions</table>
       <key>
-        <name>order_id</name>
+        <name>medication_prescription_id</name>
         <field>medication_prescription_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
         <name>medication_prescription_id</name>
-        <rename>order_id</rename>
+        <rename>medication_prescription_id</rename>
         <update>N</update>
+      </value>
+      <value>
+        <name>drug_id</name>
+        <rename>drug_id</rename>
+        <update>Y</update>
       </value>
       <value>
         <name>encounter_id</name>
         <rename>encounter_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>drug_id</name>
-        <rename>master_def_drug_id</rename>
         <update>Y</update>
       </value>
       <value>
@@ -665,7 +725,7 @@
       </value>
       <value>
         <name>end_date</name>
-        <rename>medication_end_date</rename>
+        <rename>end_date</rename>
         <update>Y</update>
       </value>
       <value>
@@ -684,34 +744,44 @@
         <update>Y</update>
       </value>
       <value>
+        <name>voided_date</name>
+        <rename>voided_date</rename>
+        <update>Y</update>
+      </value>
+      <value>
         <name>void_reason</name>
         <rename>void_reason</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>voided_date</name>
-        <rename>date_voided</rename>
-        <update>Y</update>
+        <name>creator</name>
+        <rename>creator</rename>
+        <update>N</update>
       </value>
       <value>
         <name>app_date_created</name>
-        <rename>date_created</rename>
-        <update>Y</update>
+        <rename>app_date_created</rename>
+        <update>N</update>
       </value>
       <value>
         <name>app_date_updated</name>
-        <rename>date_created</rename>
+        <rename>app_date_updated</rename>
         <update>Y</update>
       </value>
       <value>
         <name>created_at</name>
         <rename>created_at</rename>
-        <update>Y</update>
+        <update>N</update>
       </value>
       <value>
         <name>updated_at</name>
         <rename>updated_at</rename>
         <update>Y</update>
+      </value>
+      <value>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <update>N</update>
       </value>
     </lookup>
     <attributes/>
@@ -723,7 +793,139 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>2048</xloc>
+      <xloc>1232</xloc>
+      <yloc>256</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>change_voided_to_boolean</name>
+    <type>SelectValues</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <fields>
+      <field>
+        <name>order_id</name>
+        <rename>medication_prescription_id</rename>
+      </field>
+      <field>
+        <name>master_def_drug_id</name>
+        <rename>drug_id</rename>
+      </field>
+      <field>
+        <name>encounter_id</name>
+      </field>
+      <field>
+        <name>start_date</name>
+      </field>
+      <field>
+        <name>days_all_pills_to_last</name>
+      </field>
+      <field>
+        <name>instructions</name>
+      </field>
+      <field>
+        <name>voided</name>
+      </field>
+      <field>
+        <name>voided_by</name>
+      </field>
+      <field>
+        <name>date_voided</name>
+        <rename>voided_date</rename>
+      </field>
+      <field>
+        <name>void_reason</name>
+      </field>
+      <field>
+        <name>creator</name>
+      </field>
+      <field>
+        <name>date_created</name>
+        <rename>app_date_created</rename>
+      </field>
+      <field>
+        <name>date_created</name>
+        <rename>app_date_updated</rename>
+      </field>
+      <field>
+        <name>created_at</name>
+      </field>
+      <field>
+        <name>updated_at</name>
+      </field>
+      <field>
+        <name>uuid</name>
+      </field>
+      <select_unspecified>N</select_unspecified>
+      <meta>
+        <name>voided</name>
+        <rename>voided</rename>
+        <type>Boolean</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <type>Binary</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>days_all_pills_to_last</name>
+        <rename>end_date</rename>
+        <type>Timestamp</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>816</xloc>
       <yloc>256</yloc>
       <draw>Y</draw>
     </GUI>
@@ -756,8 +958,8 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1120</xloc>
-      <yloc>256</yloc>
+      <xloc>816</xloc>
+      <yloc>48</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -851,14 +1053,14 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>352</xloc>
-      <yloc>256</yloc>
+      <xloc>400</xloc>
+      <yloc>48</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>medication_end_date</name>
-    <type>Calculator</type>
+    <name>medication_precriptions</name>
+    <type>TextFileOutput</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -867,22 +1069,38 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <failIfNoFile>Y</failIfNoFile>
-    <calculation>
-      <field_name>medication_end_date</field_name>
-      <calc_type>ADD_DAYS</calc_type>
-      <field_a>start_date</field_a>
-      <field_b>days_all_pills_to_last</field_b>
-      <field_c/>
-      <value_type>Timestamp</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask/>
-      <decimal_symbol/>
-      <grouping_symbol/>
-      <currency_symbol/>
-    </calculation>
+    <separator>,</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding>windows-1252</encoding>
+    <endedLine/>
+    <fileNameInField>N</fileNameInField>
+    <fileNameField/>
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>medication_prescriptions</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>csv</extention>
+      <append>N</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format/>
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery/>
+    </file>
+    <fields>
+    </fields>
     <attributes/>
     <cluster_schema/>
     <remotesteps>
@@ -892,8 +1110,8 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1504</xloc>
-      <yloc>256</yloc>
+      <xloc>1232</xloc>
+      <yloc>464</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -910,33 +1128,31 @@
     </partitioning>
     <connection>RDS</connection>
     <sql>SELECT DISTINCT o.order_id,
+    COALESCE(pillcount.pillcount,0) pillcount,
     'drug' as master_def_entity_name,
 	o.encounter_id,
+    o.patient_id,
 	d.drug_inventory_id,
     IF(LENGTH(IF(d.equivalent_daily_dose = 0, 1,d.equivalent_daily_dose)) IS NULL,1,(IF(d.equivalent_daily_dose = 0, 1,d.equivalent_daily_dose))) equivalent_daily_dose,
     IF(LENGTH(IF(d.quantity = 0, 1,d.quantity)) IS NULL,1,(IF(d.quantity = 0, 1,d.quantity))) quantity,
     o.start_date,
-    p.person_id,
-	o.auto_expire_date, 
+  	o.auto_expire_date, 
 	o.instructions,
+    o.creator,
     o.voided, 
 	o.voided_by,
 	o.void_reason, 
 	o.date_voided, 
 	o.date_created, 
 	o.updated_at,
-    o.created_at
+    o.created_at,
+    o.uuid
 FROM orders o
   JOIN drug_order d 
 	ON o.order_id = d.order_id
-  JOIN encounter en 
-  	ON o.encounter_id = en.encounter_id
-  JOIN person p
-    ON en.patient_id = p.person_id
-WHERE o.order_type_id = 1   
-AND o.updated_at >= '${upd_prescription}'
-
-</sql>
+  LEFT JOIN pillcount
+    ON (o.order_id = pillcount.order_id)
+WHERE o.order_type_id = 1</sql>
     <limit>0</limit>
     <lookup/>
     <execute_each_row>N</execute_each_row>
@@ -951,8 +1167,8 @@ AND o.updated_at >= '${upd_prescription}'
       </output>
     </remotesteps>
     <GUI>
-      <xloc>176</xloc>
-      <yloc>256</yloc>
+      <xloc>96</xloc>
+      <yloc>48</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -992,12 +1208,66 @@ AND o.updated_at >= '${upd_prescription}'
       </output>
     </remotesteps>
     <GUI>
-      <xloc>976</xloc>
-      <yloc>416</yloc>
+      <xloc>784</xloc>
+      <yloc>224</yloc>
       <draw>N</draw>
     </GUI>
   </step>
+  <step>
+    <name>lookup encounter </name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>encounters</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>encounter_id</name>
+        <field>encounter_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1056</xloc>
+      <yloc>240</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step_error_handling>
+    <error>
+      <source_step>Insert / update</source_step>
+      <target_step>medication_precriptions</target_step>
+      <is_enabled>Y</is_enabled>
+      <nr_valuename/>
+      <descriptions_valuename/>
+      <fields_valuename/>
+      <codes_valuename/>
+      <max_errors/>
+      <max_pct_errors/>
+      <min_pct_rows/>
+    </error>
   </step_error_handling>
   <slave-step-copy-partition-distribution>
   </slave-step-copy-partition-distribution>

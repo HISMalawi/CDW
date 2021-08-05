@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2020/02/14 13:51:17.393</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/09/11 23:52:08.197</modified_date>
+    <modified_date>2021/05/31 23:02:53.882</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -437,11 +437,11 @@
   <connection>
     <name>IDS</name>
     <server>localhost</server>
-    <type>MYSQL</type>
+    <type>POSTGRESQL</type>
     <access>Native</access>
-    <database>ids_small_site</database>
-    <port>3306</port>
-    <username>root</username>
+    <database>ids_test</database>
+    <port>5432</port>
+    <username>postgres</username>
     <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
     <servername/>
     <data_tablespace/>
@@ -461,7 +461,7 @@
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
-        <attribute>3306</attribute>
+        <attribute>5432</attribute>
       </attribute>
       <attribute>
         <code>PRESERVE_RESERVED_WORD_CASE</code>
@@ -470,10 +470,6 @@
       <attribute>
         <code>QUOTE_ALL_FIELDS</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
       </attribute>
       <attribute>
         <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
@@ -492,18 +488,191 @@
   <order>
     <hop>
       <from>prescription_has_regimen</from>
+      <to>Sort rows by encounter_id</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Sort rows by encounter_id</from>
+      <to>Group by encounter_id</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Group by encounter_id</from>
       <to>regimen</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
+      <from>Merge rows (diff)</from>
+      <to>Synchronize after merge</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>ids_medication_precription_has_regimen</from>
+      <to>target</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>source</from>
+      <to>Merge rows (diff)</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Synchronize after merge</from>
+      <to>medication_prescription_has_regimen</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
       <from>regimen</from>
-      <to>Insert / update</to>
+      <to>change_to_bolean</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>change_to_bolean</from>
+      <to>source</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>target</from>
+      <to>change_to_bolean 2</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>change_to_bolean 2</from>
+      <to>Merge rows (diff)</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>Insert / update</name>
-    <type>InsertUpdate</type>
+    <name>Group by encounter_id</name>
+    <type>GroupBy</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <all_rows>Y</all_rows>
+    <ignore_aggregate>N</ignore_aggregate>
+    <field_ignore/>
+    <directory>%%java.io.tmpdir%%</directory>
+    <prefix>grp</prefix>
+    <add_linenr>N</add_linenr>
+    <linenr_fieldname/>
+    <give_back_row>N</give_back_row>
+    <group>
+      <field>
+        <name>medication_prescription_encounter_id</name>
+      </field>
+    </group>
+    <fields>
+      <field>
+        <aggregate>openmrs_drug_composition</aggregate>
+        <subject>openmrs_metadata_id</subject>
+        <type>CONCAT_COMMA</type>
+        <valuefield/>
+      </field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>112</xloc>
+      <yloc>304</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Merge rows (diff)</name>
+    <type>MergeRows</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <keys>
+      <key>medication_prescription_encounter_id</key>
+      <key>medication_regimen_id</key>
+    </keys>
+    <values>
+      <value>medication_prescription_encounter_id</value>
+      <value>medication_regimen_id</value>
+      <value>created_at</value>
+      <value>updated_at</value>
+    </values>
+    <flag_field>flagfield</flag_field>
+    <reference>change_to_bolean 2</reference>
+    <compare>source</compare>
+    <compare>
+    </compare>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>880</xloc>
+      <yloc>432</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Sort rows by encounter_id</name>
+    <type>SortRows</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <directory>%%java.io.tmpdir%%</directory>
+    <prefix>out</prefix>
+    <sort_size>1000000</sort_size>
+    <free_memory/>
+    <compress>N</compress>
+    <compress_variable/>
+    <unique_rows>N</unique_rows>
+    <fields>
+      <field>
+        <name>medication_prescription_encounter_id</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>416</xloc>
+      <yloc>128</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Synchronize after merge</name>
+    <type>SynchronizeAfterMerge</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -514,31 +683,38 @@
     </partitioning>
     <connection>IDS</connection>
     <commit>100</commit>
-    <update_bypassed>N</update_bypassed>
+    <tablename_in_field>N</tablename_in_field>
+    <tablename_field/>
+    <use_batch>N</use_batch>
+    <perform_lookup>N</perform_lookup>
+    <operation_order_field>flagfield</operation_order_field>
+    <order_insert>new</order_insert>
+    <order_update>changed</order_update>
+    <order_delete/>
     <lookup>
       <schema/>
       <table>medication_prescription_has_medication_regimen</table>
       <key>
-        <name>encounter_id</name>
+        <name>medication_prescription_encounter_id</name>
         <field>medication_prescription_encounter_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <key>
-        <name>regimen_id</name>
+        <name>medication_regimen_id</name>
         <field>medication_regimen_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
         <name>medication_prescription_encounter_id</name>
-        <rename>encounter_id</rename>
+        <rename>medication_prescription_encounter_id</rename>
         <update>N</update>
       </value>
       <value>
         <name>medication_regimen_id</name>
-        <rename>regimen_id</rename>
-        <update>Y</update>
+        <rename>medication_regimen_id</rename>
+        <update>N</update>
       </value>
       <value>
         <name>created_at</name>
@@ -560,8 +736,103 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>848</xloc>
-      <yloc>240</yloc>
+      <xloc>1104</xloc>
+      <yloc>432</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>ids_medication_precription_has_regimen</name>
+    <type>TableInput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <sql>SELECT
+  medication_prescription_encounter_id
+, medication_regimen_id
+, created_at
+, updated_at
+FROM medication_prescription_has_medication_regimen
+</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>544</xloc>
+      <yloc>656</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>medication_prescription_has_regimen</name>
+    <type>TextFileOutput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <separator>,</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding>windows-1252</encoding>
+    <endedLine/>
+    <fileNameInField>N</fileNameInField>
+    <fileNameField/>
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>medication_prescription_has_regimen</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>csv</extention>
+      <append>N</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format/>
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery/>
+    </file>
+    <fields>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1104</xloc>
+      <yloc>592</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -577,19 +848,17 @@
       <schema_name/>
     </partitioning>
     <connection>IDS</connection>
-    <sql>SELECT encounter_id,
-  group_concat(md.openmrs_metadata_id ORDER BY md.openmrs_metadata_id) openmrs_drug_composition,
+    <sql>SELECT encounter_id medication_prescription_encounter_id,
+  md.openmrs_metadata_id,
   mp.created_at,
   mp.updated_at 
 FROM medication_prescriptions mp
 JOIN master_definitions md
 ON mp.drug_id = md.master_definition_id
-  WHERE mp.updated_at >= '${upd_prescription_has_regimen}'
-    AND md.openmrs_metadata_id 
+  WHERE md.openmrs_metadata_id 
       IN (SELECT drug_id FROM arv_drugs)
     AND md.openmrs_entity_name = 'drug'
-GROUP BY encounter_id
-           </sql>
+order by encounter_id</sql>
     <limit>0</limit>
     <lookup/>
     <execute_each_row>N</execute_each_row>
@@ -604,8 +873,8 @@ GROUP BY encounter_id
       </output>
     </remotesteps>
     <GUI>
-      <xloc>336</xloc>
-      <yloc>240</yloc>
+      <xloc>112</xloc>
+      <yloc>128</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -638,7 +907,7 @@ GROUP BY encounter_id
       </key>
       <value>
         <name>medication_regimen_id</name>
-        <rename>regimen_id</rename>
+        <rename>medication_regimen_id</rename>
         <default>71</default>
         <type>Integer</type>
       </value>
@@ -652,12 +921,264 @@ GROUP BY encounter_id
       </output>
     </remotesteps>
     <GUI>
-      <xloc>608</xloc>
-      <yloc>240</yloc>
+      <xloc>416</xloc>
+      <yloc>304</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>source</name>
+    <type>SortRows</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <directory>%%java.io.tmpdir%%</directory>
+    <prefix>out</prefix>
+    <sort_size>1000000</sort_size>
+    <free_memory/>
+    <compress>N</compress>
+    <compress_variable/>
+    <unique_rows>N</unique_rows>
+    <fields>
+      <field>
+        <name>medication_prescription_encounter_id</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>688</xloc>
+      <yloc>304</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>target</name>
+    <type>SortRows</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <directory>%%java.io.tmpdir%%</directory>
+    <prefix>out</prefix>
+    <sort_size>1000000</sort_size>
+    <free_memory/>
+    <compress>N</compress>
+    <compress_variable/>
+    <unique_rows>N</unique_rows>
+    <fields>
+      <field>
+        <name>medication_prescription_encounter_id</name>
+        <ascending>Y</ascending>
+        <case_sensitive>N</case_sensitive>
+        <collator_enabled>N</collator_enabled>
+        <collator_strength>0</collator_strength>
+        <presorted>N</presorted>
+      </field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>544</xloc>
+      <yloc>528</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>change_to_bolean</name>
+    <type>SelectValues</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <fields>
+      <field>
+        <name>medication_prescription_encounter_id</name>
+        <rename/>
+      </field>
+      <field>
+        <name>medication_regimen_id</name>
+        <rename/>
+      </field>
+      <field>
+        <name>created_at</name>
+        <rename/>
+      </field>
+      <field>
+        <name>updated_at</name>
+        <rename/>
+      </field>
+      <select_unspecified>N</select_unspecified>
+      <meta>
+        <name>medication_prescription_encounter_id</name>
+        <rename>medication_prescription_encounter_id</rename>
+        <type>BigNumber</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>medication_regimen_id</name>
+        <rename>medication_regimen_id</rename>
+        <type>Integer</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>544</xloc>
+      <yloc>304</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>change_to_bolean 2</name>
+    <type>SelectValues</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <fields>
+      <field>
+        <name>medication_prescription_encounter_id</name>
+        <rename/>
+      </field>
+      <field>
+        <name>medication_regimen_id</name>
+        <rename/>
+      </field>
+      <field>
+        <name>created_at</name>
+        <rename/>
+      </field>
+      <field>
+        <name>updated_at</name>
+        <rename/>
+      </field>
+      <select_unspecified>N</select_unspecified>
+      <meta>
+        <name>medication_prescription_encounter_id</name>
+        <rename>medication_prescription_encounter_id</rename>
+        <type>BigNumber</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>medication_regimen_id</name>
+        <rename>medication_regimen_id</rename>
+        <type>Integer</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>704</xloc>
+      <yloc>480</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step_error_handling>
+    <error>
+      <source_step>Synchronize after merge</source_step>
+      <target_step>medication_prescription_has_regimen</target_step>
+      <is_enabled>Y</is_enabled>
+      <nr_valuename/>
+      <descriptions_valuename/>
+      <fields_valuename/>
+      <codes_valuename/>
+      <max_errors/>
+      <max_pct_errors/>
+      <min_pct_rows/>
+    </error>
   </step_error_handling>
   <slave-step-copy-partition-distribution>
   </slave-step-copy-partition-distribution>

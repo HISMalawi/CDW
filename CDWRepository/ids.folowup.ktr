@@ -1,10 +1,11 @@
 <transformation>
   <info>
-    <name>ids.personAddresses</name>
+    <name>ids.folowup</name>
     <description/>
     <extended_description/>
     <trans_version/>
     <trans_type>Normal</trans_type>
+    <trans_status>0</trans_status>
     <directory>/</directory>
     <parameters>
     </parameters>
@@ -426,9 +427,9 @@
     <clusterschemas>
     </clusterschemas>
     <created_user>-</created_user>
-    <created_date>2019/12/14 14:13:30.404</created_date>
+    <created_date>2021/06/07 09:15:13.250</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2021/06/28 10:32:20.875</modified_date>
+    <modified_date>2021/08/05 12:47:38.382</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -487,10 +488,10 @@
   </connection>
   <connection>
     <name>RDS</name>
-    <server>0.0.0.0</server>
+    <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds</database>
+    <database>rds_b2c</database>
     <port>3306</port>
     <username>pentaho</username>
     <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
@@ -546,13 +547,23 @@
   </connection>
   <order>
     <hop>
-      <from>person_address</from>
-      <to>change_voided_to_boolean</to>
+      <from>Execute SQL script Create table if not exists</from>
+      <to>Followup obs</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Insert / update</from>
-      <to>person_address_errors</to>
+      <from>value_coded</from>
+      <to>concept_id</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Followup obs</from>
+      <to>value_coded</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>concept_id</from>
+      <to>change_voided_to_boolean</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
@@ -562,10 +573,167 @@
     </hop>
     <hop>
       <from>Database lookup</from>
+      <to>lookup encounter </to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>lookup encounter </from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
   </order>
+  <step>
+    <name>Database lookup</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>people</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>person_id</name>
+        <field>person_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1088</xloc>
+      <yloc>144</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Execute SQL script Create table if not exists</name>
+    <type>ExecSQL</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <execute_each_row>N</execute_each_row>
+    <single_statement>N</single_statement>
+    <replace_variables>N</replace_variables>
+    <quoteString>N</quoteString>
+    <sql>CREATE table if not exists followup (
+followup_id bigserial PRIMARY KEY,
+person_id bigint,
+concept_id int,
+encounter_id bigint,
+value_coded int,
+creator bigserial,
+app_date_created timestamp,
+voided boolean,
+voided_by bigint,
+date_voided timestamp,
+void_reason varchar(255),
+uuid bytea,
+created_at timestamp,
+updated_at timestamp,
+CONSTRAINT fk_person
+	FOREIGN KEY(person_id)
+      REFERENCES people(person_id),
+CONSTRAINT fk_encounter
+	FOREIGN KEY(encounter_id)
+      REFERENCES encounters(encounter_id)
+);</sql>
+    <set_params>N</set_params>
+    <insert_field/>
+    <update_field/>
+    <delete_field/>
+    <read_field/>
+    <arguments>
+    </arguments>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>208</xloc>
+      <yloc>352</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Followup obs</name>
+    <type>TableInput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <sql>SELECT
+  obs_id
+,'concept_name' as concept_name
+, person_id
+, concept_id
+, encounter_id
+, value_coded
+, value_coded_name_id
+, creator
+, date_created
+, voided
+, voided_by
+, date_voided
+, void_reason
+, uuid
+, created_at
+, updated_at
+FROM obs
+WHERE concept_id IN (9685,9686);
+</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>208</xloc>
+      <yloc>144</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step>
     <name>Insert / update</name>
     <type>InsertUpdate</type>
@@ -582,16 +750,16 @@
     <update_bypassed>N</update_bypassed>
     <lookup>
       <schema/>
-      <table>person_addresses</table>
+      <table>followup</table>
       <key>
-        <name>person_address_id</name>
-        <field>person_address_id</field>
+        <name>obs_id</name>
+        <field>followup_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>person_address_id</name>
-        <rename>person_address_id</rename>
+        <name>followup_id</name>
+        <rename>obs_id</rename>
         <update>N</update>
       </value>
       <value>
@@ -600,28 +768,18 @@
         <update>Y</update>
       </value>
       <value>
-        <name>landmark</name>
-        <rename>landmark</rename>
+        <name>concept_id</name>
+        <rename>lkup_concept_id</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>home_district_id</name>
-        <rename>home_district_id</rename>
+        <name>encounter_id</name>
+        <rename>encounter_id</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>current_village_id</name>
-        <rename>current_village_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>current_district_id</name>
-        <rename>current_district_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>country_id</name>
-        <rename>country_id</rename>
+        <name>value_coded</name>
+        <rename>lkup_value_coded</rename>
         <update>Y</update>
       </value>
       <value>
@@ -631,13 +789,8 @@
       </value>
       <value>
         <name>app_date_created</name>
-        <rename>app_date_created</rename>
+        <rename>date_created</rename>
         <update>N</update>
-      </value>
-      <value>
-        <name>app_date_updated</name>
-        <rename>app_date_updated</rename>
-        <update>Y</update>
       </value>
       <value>
         <name>voided</name>
@@ -650,8 +803,8 @@
         <update>Y</update>
       </value>
       <value>
-        <name>voided_date</name>
-        <rename>voided_date</rename>
+        <name>date_voided</name>
+        <rename>date_voided</rename>
         <update>Y</update>
       </value>
       <value>
@@ -660,24 +813,9 @@
         <update>Y</update>
       </value>
       <value>
-        <name>home_traditional_authority_id</name>
-        <rename>home_traditional_authority_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>home_village_id</name>
-        <rename>home_village_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>current_traditional_authority_id</name>
-        <rename>current_traditional_authority_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
         <name>uuid</name>
         <rename>uuid</rename>
-        <update>Y</update>
+        <update>N</update>
       </value>
       <value>
         <name>created_at</name>
@@ -686,8 +824,8 @@
       </value>
       <value>
         <name>updated_at</name>
-        <rename>created_at</rename>
-        <update>N</update>
+        <rename>updated_at</rename>
+        <update>Y</update>
       </value>
     </lookup>
     <attributes/>
@@ -699,8 +837,8 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>768</xloc>
-      <yloc>224</yloc>
+      <xloc>1088</xloc>
+      <yloc>544</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -717,41 +855,31 @@
     </partitioning>
     <fields>
       <field>
-        <name>person_address_id</name>
+        <name>obs_id</name>
+      </field>
+      <field>
+        <name>concept_name</name>
       </field>
       <field>
         <name>person_id</name>
       </field>
       <field>
-        <name>address1</name>
-        <rename>landmark</rename>
+        <name>concept_id</name>
       </field>
       <field>
-        <name>address2</name>
-        <rename>home_district_id</rename>
+        <name>encounter_id</name>
       </field>
       <field>
-        <name>city_village</name>
-        <rename>current_village_id</rename>
+        <name>value_coded</name>
       </field>
       <field>
-        <name>state_province</name>
-        <rename>current_district_id</rename>
-      </field>
-      <field>
-        <name>country</name>
-        <rename>country_id</rename>
+        <name>value_coded_name_id</name>
       </field>
       <field>
         <name>creator</name>
       </field>
       <field>
         <name>date_created</name>
-        <rename>app_date_created</rename>
-      </field>
-      <field>
-        <name>date_created</name>
-        <rename>app_date_updated</rename>
       </field>
       <field>
         <name>voided</name>
@@ -761,22 +889,9 @@
       </field>
       <field>
         <name>date_voided</name>
-        <rename>voided_date</rename>
       </field>
       <field>
         <name>void_reason</name>
-      </field>
-      <field>
-        <name>county_district</name>
-        <rename>home_traditional_authority_id</rename>
-      </field>
-      <field>
-        <name>neighborhood_cell</name>
-        <rename>home_village_id</rename>
-      </field>
-      <field>
-        <name>township_division</name>
-        <rename>current_traditional_authority_id</rename>
       </field>
       <field>
         <name>uuid</name>
@@ -784,11 +899,37 @@
       <field>
         <name>created_at</name>
       </field>
+      <field>
+        <name>updated_at</name>
+      </field>
+      <field>
+        <name>lkup_concept_id</name>
+      </field>
+      <field>
+        <name>lkup_value_coded</name>
+      </field>
       <select_unspecified>N</select_unspecified>
       <meta>
         <name>voided</name>
         <rename>voided</rename>
         <type>Boolean</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>date_created</name>
+        <rename>date_created</rename>
+        <type>Timestamp</type>
         <length>-2</length>
         <precision>-2</precision>
         <conversion_mask/>
@@ -829,104 +970,13 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>512</xloc>
-      <yloc>224</yloc>
+      <xloc>896</xloc>
+      <yloc>144</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>person_address</name>
-    <type>TableInput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>RDS</connection>
-    <sql>select pa.*,
-       128 as country_id
-FROM person_address pa</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>144</xloc>
-      <yloc>224</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>person_address_errors</name>
-    <type>TextFileOutput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <separator>;</separator>
-    <enclosure>"</enclosure>
-    <enclosure_forced>N</enclosure_forced>
-    <enclosure_fix_disabled>N</enclosure_fix_disabled>
-    <header>Y</header>
-    <footer>N</footer>
-    <format>DOS</format>
-    <compression>None</compression>
-    <encoding>windows-1252</encoding>
-    <endedLine/>
-    <fileNameInField>N</fileNameInField>
-    <fileNameField/>
-    <create_parent_folder>Y</create_parent_folder>
-    <file>
-      <name>person_name_error_log</name>
-      <servlet_output>N</servlet_output>
-      <do_not_open_new_file_init>N</do_not_open_new_file_init>
-      <extention>log</extention>
-      <append>N</append>
-      <split>N</split>
-      <haspartno>N</haspartno>
-      <add_date>N</add_date>
-      <add_time>N</add_time>
-      <SpecifyFormat>N</SpecifyFormat>
-      <date_time_format/>
-      <add_to_result_filenames>Y</add_to_result_filenames>
-      <pad>N</pad>
-      <fast_dump>N</fast_dump>
-      <splitevery/>
-    </file>
-    <fields>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>768</xloc>
-      <yloc>400</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Database lookup</name>
+    <name>concept_id</name>
     <type>DBLookup</type>
     <description/>
     <distribute>Y</distribute>
@@ -942,13 +992,67 @@ FROM person_address pa</sql>
     <cache_size>0</cache_size>
     <lookup>
       <schema/>
-      <table>people</table>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>concept_id</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>lkup_concept_id</rename>
+        <default>1067</default>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>672</xloc>
+      <yloc>144</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>lookup encounter </name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>encounters</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>
       <eat_row_on_failure>Y</eat_row_on_failure>
       <key>
-        <name>person_id</name>
-        <field>person_id</field>
+        <name>encounter_id</name>
+        <field>encounter_id</field>
         <condition>=</condition>
         <name2/>
       </key>
@@ -962,24 +1066,66 @@ FROM person_address pa</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>656</xloc>
-      <yloc>208</yloc>
+      <xloc>1088</xloc>
+      <yloc>320</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>value_coded</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>value_coded</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>lkup_value_coded</rename>
+        <default>1067</default>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>432</xloc>
+      <yloc>144</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step_error_handling>
-    <error>
-      <source_step>Insert / update</source_step>
-      <target_step>person_address_errors</target_step>
-      <is_enabled>Y</is_enabled>
-      <nr_valuename/>
-      <descriptions_valuename/>
-      <fields_valuename/>
-      <codes_valuename/>
-      <max_errors/>
-      <max_pct_errors/>
-      <min_pct_rows/>
-    </error>
   </step_error_handling>
   <slave-step-copy-partition-distribution>
   </slave-step-copy-partition-distribution>

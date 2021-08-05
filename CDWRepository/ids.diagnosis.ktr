@@ -5,6 +5,7 @@
     <extended_description/>
     <trans_version/>
     <trans_type>Normal</trans_type>
+    <trans_status>0</trans_status>
     <directory>/</directory>
     <parameters>
     </parameters>
@@ -414,7 +415,7 @@
     <feedback_size>50000</feedback_size>
     <using_thread_priorities>Y</using_thread_priorities>
     <shared_objects_file/>
-    <capture_step_performance>N</capture_step_performance>
+    <capture_step_performance>Y</capture_step_performance>
     <step_performance_capturing_delay>1000</step_performance_capturing_delay>
     <step_performance_capturing_size_limit>100</step_performance_capturing_size_limit>
     <dependencies>
@@ -428,7 +429,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 09:36:41.929</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/02/23 15:44:18.251</modified_date>
+    <modified_date>2021/06/30 15:28:47.791</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -437,20 +438,16 @@
   <connection>
     <name>IDS</name>
     <server>localhost</server>
-    <type>MYSQL</type>
+    <type>POSTGRESQL</type>
     <access>Native</access>
     <database>ids</database>
-    <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <port>5432</port>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -465,7 +462,7 @@
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
-        <attribute>3306</attribute>
+        <attribute>5432</attribute>
       </attribute>
       <attribute>
         <code>PRESERVE_RESERVED_WORD_CASE</code>
@@ -474,10 +471,6 @@
       <attribute>
         <code>QUOTE_ALL_FIELDS</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
       </attribute>
       <attribute>
         <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
@@ -495,13 +488,13 @@
   </connection>
   <connection>
     <name>RDS</name>
-    <server>localhost</server>
+    <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds_small_site</database>
+    <database>rds</database>
     <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
@@ -554,21 +547,140 @@
   </connection>
   <order>
     <hop>
+      <from>numeric_diagnosis</from>
+      <to>diag_type</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
       <from>obs - diagnosis</from>
-      <to>primary_diag</to>
+      <to>Filter Text Diag</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>primary_diag</from>
-      <to>secondary_diag</to>
+      <from>Filter Text Diag</from>
+      <to>numeric_diagnosis</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>secondary_diag</from>
+      <from>Filter Text Diag</from>
+      <to>text_diagnosis</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>text_diagnosis</from>
+      <to>Filter Diag failed lookup</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Filter Diag failed lookup</from>
+      <to>diag_type</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Filter Diag failed lookup</from>
+      <to>Text file output</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>diag_type</from>
+      <to>change_voided_to_boolean</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Insert / update</from>
+      <to>diagnosis_errors</to>
+      <enabled>N</enabled>
+    </hop>
+    <hop>
+      <from>change_voided_to_boolean</from>
+      <to>lookup encounter </to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>lookup encounter </from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
   </order>
+  <step>
+    <name>Filter Diag failed lookup</name>
+    <type>FilterRows</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <send_true_to>Text file output</send_true_to>
+    <send_false_to>diag_type</send_false_to>
+    <compare>
+      <condition>
+        <negated>N</negated>
+        <leftvalue>diagnosis</leftvalue>
+        <function>IS NULL</function>
+        <rightvalue/>
+      </condition>
+    </compare>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>480</xloc>
+      <yloc>352</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Filter Text Diag</name>
+    <type>FilterRows</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <send_true_to>text_diagnosis</send_true_to>
+    <send_false_to>numeric_diagnosis</send_false_to>
+    <compare>
+      <condition>
+        <negated>N</negated>
+        <leftvalue>diag</leftvalue>
+        <function>REGEXP</function>
+        <rightvalue/>
+        <value>
+          <name>constant</name>
+          <type>String</type>
+          <text>^[0-9]+$</text>
+          <length>-1</length>
+          <precision>-1</precision>
+          <isnull>N</isnull>
+          <mask>#</mask>
+        </value>
+      </condition>
+    </compare>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>240</xloc>
+      <yloc>208</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step>
     <name>Insert / update</name>
     <type>InsertUpdate</type>
@@ -598,13 +710,13 @@
         <update>N</update>
       </value>
       <value>
-        <name>primary_diagnosis</name>
-        <rename>master_def_primary_diagnosis</rename>
+        <name>diagnosis</name>
+        <rename>diagnosis</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>secondary_diagnosis</name>
-        <rename>master_def_secondary_diagnosis</rename>
+        <name>diag_type</name>
+        <rename>diag_type</rename>
         <update>Y</update>
       </value>
       <value>
@@ -652,6 +764,16 @@
         <rename>updated_at</rename>
         <update>Y</update>
       </value>
+      <value>
+        <name>encounter_id</name>
+        <rename>encounter_id</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <update>N</update>
+      </value>
     </lookup>
     <attributes/>
     <cluster_schema/>
@@ -662,13 +784,180 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>576</xloc>
+      <xloc>1328</xloc>
       <yloc>208</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>primary_diag</name>
+    <name>Text file output</name>
+    <type>TextFileOutput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <separator>;</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding>windows-1252</encoding>
+    <endedLine/>
+    <fileNameInField>N</fileNameInField>
+    <fileNameField/>
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>daig_failed_lookup</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>log</extention>
+      <append>N</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format/>
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery/>
+    </file>
+    <fields>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>736</xloc>
+      <yloc>464</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>change_voided_to_boolean</name>
+    <type>SelectValues</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <fields>
+      <field>
+        <name>obs_id</name>
+      </field>
+      <field>
+        <name>encounter_id</name>
+      </field>
+      <field>
+        <name>concept_id</name>
+      </field>
+      <field>
+        <name>diag</name>
+      </field>
+      <field>
+        <name>concept_name</name>
+      </field>
+      <field>
+        <name>voided</name>
+      </field>
+      <field>
+        <name>voided_by</name>
+      </field>
+      <field>
+        <name>void_reason</name>
+      </field>
+      <field>
+        <name>date_voided</name>
+      </field>
+      <field>
+        <name>creator</name>
+      </field>
+      <field>
+        <name>date_created</name>
+      </field>
+      <field>
+        <name>updated_at</name>
+      </field>
+      <field>
+        <name>created_at</name>
+      </field>
+      <field>
+        <name>uuid</name>
+      </field>
+      <field>
+        <name>diagnosis</name>
+      </field>
+      <field>
+        <name>diag_type</name>
+      </field>
+      <select_unspecified>N</select_unspecified>
+      <meta>
+        <name>voided</name>
+        <rename>voided</rename>
+        <type>Boolean</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <type>Binary</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>992</xloc>
+      <yloc>208</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>diag_type</name>
     <type>DBLookup</type>
     <description/>
     <distribute>Y</distribute>
@@ -689,7 +978,7 @@
       <fail_on_multiple>N</fail_on_multiple>
       <eat_row_on_failure>N</eat_row_on_failure>
       <key>
-        <name>primary_diagnosis</name>
+        <name>concept_id</name>
         <field>openmrs_metadata_id</field>
         <condition>=</condition>
         <name2/>
@@ -702,7 +991,7 @@
       </key>
       <value>
         <name>master_definition_id</name>
-        <rename>master_def_primary_diagnosis</rename>
+        <rename>diag_type</rename>
         <default/>
         <type>Integer</type>
       </value>
@@ -716,7 +1005,160 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>288</xloc>
+      <xloc>784</xloc>
+      <yloc>208</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>diagnosis_errors</name>
+    <type>TextFileOutput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <separator>,</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding>windows-1252</encoding>
+    <endedLine/>
+    <fileNameInField>N</fileNameInField>
+    <fileNameField/>
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>diagnosis_errors</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>csv</extention>
+      <append>N</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format/>
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery/>
+    </file>
+    <fields>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1328</xloc>
+      <yloc>400</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>lookup encounter </name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>encounters</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>encounter_id</name>
+        <field>encounter_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1184</xloc>
+      <yloc>208</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>numeric_diagnosis</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>master_definitions</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>N</eat_row_on_failure>
+      <key>
+        <name>diag</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>concept_name</name>
+        <field>openmrs_entity_name</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>master_definition_id</name>
+        <rename>diagnosis</rename>
+        <default/>
+        <type>Integer</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>480</xloc>
       <yloc>208</yloc>
       <draw>Y</draw>
     </GUI>
@@ -733,11 +1175,11 @@
       <schema_name/>
     </partitioning>
     <connection>RDS</connection>
-    <sql>SELECT ob.obs_id, 
+    <sql>SELECT ob.obs_id,
        ob.encounter_id,
-       max(case WHEN ob.concept_id = 6542 then ob.value_coded end) as primary_diagnosis, 
-       max(case WHEN ob.concept_id = 6543 then ob.value_coded end) as secondary_diagnosis,
-       'concept_name' as concept_name,
+       ob.concept_id,
+       COALESCE(ob.value_coded,ob.value_numeric,ob.value_text) diag,
+      'concept_name' as concept_name,
        ob.voided, 
        ob.voided_by,
        ob.void_reason, 
@@ -745,11 +1187,10 @@
        ob.creator,
        ob.date_created,
        ob.updated_at,
-       ob.created_at
+       ob.created_at,
+       ob.uuid
        FROM obs ob
-       WHERE ob.concept_id IN (6542,6543)
-       AND ob.updated_at > '${upd_diagnosis}'
-    GROUP BY ob.encounter_id;
+       WHERE ob.concept_id IN (6542,8345,8348,6543,8346,8347)
 
 </sql>
     <limit>0</limit>
@@ -766,13 +1207,13 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>112</xloc>
+      <xloc>64</xloc>
       <yloc>208</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>secondary_diag</name>
+    <name>text_diagnosis</name>
     <type>DBLookup</type>
     <description/>
     <distribute>Y</distribute>
@@ -793,8 +1234,8 @@
       <fail_on_multiple>N</fail_on_multiple>
       <eat_row_on_failure>N</eat_row_on_failure>
       <key>
-        <name>secondary_diagnosis</name>
-        <field>openmrs_metadata_id</field>
+        <name>diag</name>
+        <field>definition</field>
         <condition>=</condition>
         <name2/>
       </key>
@@ -806,7 +1247,7 @@
       </key>
       <value>
         <name>master_definition_id</name>
-        <rename>master_def_secondary_diagnosis</rename>
+        <rename>diagnosis</rename>
         <default/>
         <type>Integer</type>
       </value>
@@ -820,12 +1261,36 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>432</xloc>
-      <yloc>208</yloc>
+      <xloc>240</xloc>
+      <yloc>352</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step_error_handling>
+    <error>
+      <source_step>Insert / update</source_step>
+      <target_step>diagnosis_errors</target_step>
+      <is_enabled>N</is_enabled>
+      <nr_valuename/>
+      <descriptions_valuename/>
+      <fields_valuename/>
+      <codes_valuename/>
+      <max_errors/>
+      <max_pct_errors/>
+      <min_pct_rows/>
+    </error>
+    <error>
+      <source_step>text_diagnosis</source_step>
+      <target_step/>
+      <is_enabled>Y</is_enabled>
+      <nr_valuename/>
+      <descriptions_valuename/>
+      <fields_valuename/>
+      <codes_valuename/>
+      <max_errors/>
+      <max_pct_errors/>
+      <min_pct_rows/>
+    </error>
   </step_error_handling>
   <slave-step-copy-partition-distribution>
   </slave-step-copy-partition-distribution>

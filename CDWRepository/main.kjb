@@ -8,18 +8,18 @@
   <created_user>-</created_user>
   <created_date>2019/12/13 05:09:10.098</created_date>
   <modified_user>-</modified_user>
-  <modified_date>2019/12/24 11:16:32.342</modified_date>
+  <modified_date>2021/02/11 14:49:56.659</modified_date>
   <parameters>
     </parameters>
   <connection>
     <name>IDSLog</name>
-    <server>de-load-dev01.biotech.cdc.gov</server>
+    <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>dev_ids</database>
+    <database>ids</database>
     <port>3306</port>
-    <username>idspent</username>
-    <password>Encrypted 2be98afc86aa7bf85a7398e76cb9cfd8b</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
@@ -402,7 +402,7 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>208</xloc>
+      <xloc>224</xloc>
       <yloc>144</yloc>
       <attributes_kjc/>
     </entry>
@@ -439,7 +439,7 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>560</xloc>
+      <xloc>768</xloc>
       <yloc>144</yloc>
       <attributes_kjc/>
     </entry>
@@ -478,7 +478,7 @@
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>
-      <xloc>320</xloc>
+      <xloc>448</xloc>
       <yloc>144</yloc>
       <attributes_kjc/>
     </entry>

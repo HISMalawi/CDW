@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 14:53:15.504</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/10/13 13:32:42.525</modified_date>
+    <modified_date>2021/06/28 10:30:29.123</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -439,10 +439,10 @@
     <server>localhost</server>
     <type>POSTGRESQL</type>
     <access>Native</access>
-    <database>ids_pg_test</database>
+    <database>ids</database>
     <port>5432</port>
-    <username>postgres</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
@@ -487,17 +487,21 @@
   </connection>
   <connection>
     <name>RDS</name>
-    <server>localhost</server>
+    <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds_booked_appointments</database>
+    <database>rds</database>
     <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -542,7 +546,17 @@
   </connection>
   <order>
     <hop>
+      <from>Insert / update</from>
+      <to>person_has_types_errors</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
       <from>person types</from>
+      <to>Database lookup</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Database lookup</from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
@@ -589,7 +603,7 @@
       <value>
         <name>created_at</name>
         <rename>created_at</rename>
-        <update>Y</update>
+        <update>N</update>
       </value>
       <value>
         <name>updated_at</name>
@@ -606,7 +620,7 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>288</xloc>
+      <xloc>416</xloc>
       <yloc>240</yloc>
       <draw>Y</draw>
     </GUI>
@@ -633,7 +647,6 @@ SELECT
 FROM users u
 	join person p
 		on u.user_id = p.person_id
-WHERE u.updated_at >= '${upd_personHasTypes}'
 union
 -- gurdians (person_type_id : 5)
 SELECT 	r.person_b as person_id
@@ -644,7 +657,6 @@ FROM relationship r
 	join person p
 		on r.person_b = p.person_id
 WHERE relationship = 6 
-	AND r.updated_at >= '${upd_personHasTypes}' 
 union
 -- patients (person_type_id : 1)
 SELECT p.patient_id as person_id
@@ -654,7 +666,6 @@ SELECT p.patient_id as person_id
 FROM patient p
 	join person psn
 		on p.patient_id = psn.person_id
-WHERE p.updated_at >= '${upd_personHasTypes}'
 union
 -- providers (person_type_id : 2)
 SELECT 
@@ -665,7 +676,6 @@ SELECT
 FROM users u
 	join person p
 		on u.user_id = p.person_id
-WHERE u.updated_at >= '${upd_personHasTypes}'
 
 </sql>
     <limit>0</limit>
@@ -687,11 +697,110 @@ WHERE u.updated_at >= '${upd_personHasTypes}'
       <draw>Y</draw>
     </GUI>
   </step>
+  <step>
+    <name>person_has_types_errors</name>
+    <type>TextFileOutput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <separator>;</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding>windows-1252</encoding>
+    <endedLine/>
+    <fileNameInField>N</fileNameInField>
+    <fileNameField/>
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>person_name_error_log</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>log</extention>
+      <append>N</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format/>
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery/>
+    </file>
+    <fields>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>416</xloc>
+      <yloc>384</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Database lookup</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>people</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>person_id</name>
+        <field>person_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>288</xloc>
+      <yloc>240</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step_error_handling>
     <error>
       <source_step>Insert / update</source_step>
-      <target_step>Dummy (do nothing)</target_step>
-      <is_enabled>N</is_enabled>
+      <target_step>person_has_types_errors</target_step>
+      <is_enabled>Y</is_enabled>
       <nr_valuename/>
       <descriptions_valuename/>
       <fields_valuename/>

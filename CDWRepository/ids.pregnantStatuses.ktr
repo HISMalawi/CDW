@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 16:25:17.306</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/05/29 16:48:18.813</modified_date>
+    <modified_date>2021/06/28 10:37:57.377</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -437,12 +437,12 @@
   <connection>
     <name>IDS</name>
     <server>localhost</server>
-    <type>MYSQL</type>
+    <type>POSTGRESQL</type>
     <access>Native</access>
-    <database>ids_small_site</database>
-    <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <database>ids</database>
+    <port>5432</port>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
@@ -461,7 +461,7 @@
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
-        <attribute>3306</attribute>
+        <attribute>5432</attribute>
       </attribute>
       <attribute>
         <code>PRESERVE_RESERVED_WORD_CASE</code>
@@ -470,10 +470,6 @@
       <attribute>
         <code>QUOTE_ALL_FIELDS</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
       </attribute>
       <attribute>
         <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
@@ -491,17 +487,21 @@
   </connection>
   <connection>
     <name>RDS</name>
-    <server>localhost</server>
+    <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds_small_site</database>
+    <database>rds</database>
     <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -557,6 +557,21 @@
     </hop>
     <hop>
       <from>concept_id</from>
+      <to>change_voided_to_boolean</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Insert / update</from>
+      <to>Text file output</to>
+      <enabled>N</enabled>
+    </hop>
+    <hop>
+      <from>change_voided_to_boolean</from>
+      <to>lookup encounter </to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>lookup encounter </from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
@@ -627,7 +642,7 @@
       <value>
         <name>app_date_created</name>
         <rename>date_created</rename>
-        <update>Y</update>
+        <update>N</update>
       </value>
       <value>
         <name>app_date_updated</name>
@@ -637,12 +652,17 @@
       <value>
         <name>created_at</name>
         <rename>created_at</rename>
-        <update>Y</update>
+        <update>N</update>
       </value>
       <value>
         <name>updated_at</name>
         <rename>updated_at</rename>
         <update>Y</update>
+      </value>
+      <value>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <update>N</update>
       </value>
     </lookup>
     <attributes/>
@@ -654,7 +674,194 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>560</xloc>
+      <xloc>1056</xloc>
+      <yloc>160</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Text file output</name>
+    <type>TextFileOutput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <separator>,</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding/>
+    <endedLine/>
+    <fileNameInField>N</fileNameInField>
+    <fileNameField/>
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>pregnant_statuses_error_log</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>csv</extention>
+      <append>N</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format/>
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery/>
+    </file>
+    <fields>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1056</xloc>
+      <yloc>352</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>change_voided_to_boolean</name>
+    <type>SelectValues</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <fields>
+      <field>
+        <name>obs_id</name>
+      </field>
+      <field>
+        <name>concept_id</name>
+      </field>
+      <field>
+        <name>concept_name</name>
+      </field>
+      <field>
+        <name>encounter_id</name>
+      </field>
+      <field>
+        <name>definition</name>
+      </field>
+      <field>
+        <name>voided</name>
+      </field>
+      <field>
+        <name>voided_by</name>
+      </field>
+      <field>
+        <name>date_voided</name>
+      </field>
+      <field>
+        <name>void_reason</name>
+      </field>
+      <field>
+        <name>date_created</name>
+      </field>
+      <field>
+        <name>date_updated</name>
+      </field>
+      <field>
+        <name>created_at</name>
+      </field>
+      <field>
+        <name>updated_at</name>
+      </field>
+      <field>
+        <name>value_coded</name>
+      </field>
+      <field>
+        <name>lkup_value_coded</name>
+      </field>
+      <field>
+        <name>lkup_concept_id</name>
+      </field>
+      <field>
+        <name>uuid</name>
+      </field>
+      <select_unspecified>N</select_unspecified>
+      <meta>
+        <name>voided</name>
+        <rename>voided</rename>
+        <type>Boolean</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>date_updated</name>
+        <rename>date_updated</rename>
+        <type>Timestamp</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <type>Binary</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>752</xloc>
       <yloc>160</yloc>
       <draw>Y</draw>
     </GUI>
@@ -708,7 +915,7 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>400</xloc>
+      <xloc>464</xloc>
       <yloc>160</yloc>
       <draw>Y</draw>
     </GUI>
@@ -739,13 +946,10 @@
     , o.created_at
     , o.updated_at
 	, o.value_coded
+    , o.uuid
 FROM obs o
-   JOIN encounter e
-      ON o.encounter_id = e.encounter_id
-   JOIN person p
-      ON e.patient_id = p.person_id
-WHERE (o.concept_id in (1755,6131) 
-AND o.updated_at >= '${upd_pregnantStatuses}')</sql>
+WHERE o.concept_id in (1755,6131) 
+</sql>
     <limit>0</limit>
     <lookup/>
     <execute_each_row>N</execute_each_row>
@@ -819,7 +1023,61 @@ AND o.updated_at >= '${upd_pregnantStatuses}')</sql>
       <draw>Y</draw>
     </GUI>
   </step>
+  <step>
+    <name>lookup encounter </name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>encounters</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>encounter_id</name>
+        <field>encounter_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>928</xloc>
+      <yloc>160</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step_error_handling>
+    <error>
+      <source_step>Insert / update</source_step>
+      <target_step>Text file output</target_step>
+      <is_enabled>N</is_enabled>
+      <nr_valuename/>
+      <descriptions_valuename/>
+      <fields_valuename/>
+      <codes_valuename/>
+      <max_errors/>
+      <max_pct_errors/>
+      <min_pct_rows/>
+    </error>
   </step_error_handling>
   <slave-step-copy-partition-distribution>
   </slave-step-copy-partition-distribution>

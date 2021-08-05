@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2020/02/18 20:46:49.756</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/06/20 19:32:36.098</modified_date>
+    <modified_date>2021/06/28 10:33:02.428</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -437,12 +437,12 @@
   <connection>
     <name>IDS</name>
     <server>localhost</server>
-    <type>MYSQL</type>
+    <type>POSTGRESQL</type>
     <access>Native</access>
     <database>ids</database>
-    <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <port>5432</port>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
@@ -461,7 +461,7 @@
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
-        <attribute>3306</attribute>
+        <attribute>5432</attribute>
       </attribute>
       <attribute>
         <code>PRESERVE_RESERVED_WORD_CASE</code>
@@ -470,10 +470,6 @@
       <attribute>
         <code>QUOTE_ALL_FIELDS</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
       </attribute>
       <attribute>
         <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
@@ -491,17 +487,21 @@
   </connection>
   <connection>
     <name>RDS</name>
-    <server>localhost</server>
+    <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
     <database>rds</database>
     <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -561,11 +561,6 @@
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>reason_for_starting_and_who_stage_calculator</from>
-      <to>Insert / update</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
       <from>obs - hiv_staging_info</from>
       <to>who_stage_value_coded</to>
       <enabled>Y</enabled>
@@ -578,6 +573,21 @@
     <hop>
       <from>who_stage_value_coded</from>
       <to>who_stage_value_text_code</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>reason_for_starting_and_who_stage_calculator</from>
+      <to>change_voided_to_boolean</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>change_voided_to_boolean</from>
+      <to>Database lookup</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Database lookup</from>
+      <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
   </order>
@@ -608,7 +618,7 @@ CREATE TABLE IF NOT EXISTS temp_earliest_start_date (
              gender VARCHAR(32),
              age_at_initiation INT DEFAULT NULL,
              age_in_days INT DEFAULT NULL,
-             PRIMARY KEY(patient_id, date_enrolled)
+             PRIMARY KEY(patient_id,date_enrolled)
           ) ENGINE=INNODB 
          PARTITION BY HASH(YEAR(date_enrolled))
          PARTITIONS 12;
@@ -618,6 +628,8 @@ CREATE INDEX date_enrolled_index ON temp_earliest_start_date (date_enrolled);
 CREATE INDEX patient_id__date_enrolled_index ON temp_earliest_start_date (patient_id, date_enrolled);
 CREATE INDEX earliest_start_date_index ON temp_earliest_start_date (earliest_start_date);
 CREATE INDEX earliest_start_date__date_enrolled_index ON temp_earliest_start_date (earliest_start_date, date_enrolled);
+
+set sql_mode = '';
 
 INSERT INTO temp_earliest_start_date
           select
@@ -693,7 +705,7 @@ INSERT INTO temp_earliest_start_date
       <value>
         <name>person_id</name>
         <rename>patient_id</rename>
-        <update>Y</update>
+        <update>N</update>
       </value>
       <value>
         <name>start_date</name>
@@ -753,7 +765,7 @@ INSERT INTO temp_earliest_start_date
       <value>
         <name>updated_at</name>
         <rename>updated_at</rename>
-        <update>N</update>
+        <update>Y</update>
       </value>
     </lookup>
     <attributes/>
@@ -765,7 +777,151 @@ INSERT INTO temp_earliest_start_date
       </output>
     </remotesteps>
     <GUI>
-      <xloc>944</xloc>
+      <xloc>624</xloc>
+      <yloc>256</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>change_voided_to_boolean</name>
+    <type>SelectValues</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <fields>
+      <field>
+        <name>patient_id</name>
+      </field>
+      <field>
+        <name>updated_at</name>
+      </field>
+      <field>
+        <name>concept_name</name>
+      </field>
+      <field>
+        <name>patient_id_1</name>
+      </field>
+      <field>
+        <name>date_enrolled</name>
+      </field>
+      <field>
+        <name>earliest_start_date</name>
+      </field>
+      <field>
+        <name>age_at_initiation</name>
+      </field>
+      <field>
+        <name>age_in_days</name>
+      </field>
+      <field>
+        <name>patient_id_2</name>
+      </field>
+      <field>
+        <name>re_initiated</name>
+      </field>
+      <field>
+        <name>transfer_in</name>
+      </field>
+      <field>
+        <name>patient_id_3</name>
+      </field>
+      <field>
+        <name>re_initiated_1</name>
+      </field>
+      <field>
+        <name>re_initiated_code</name>
+      </field>
+      <field>
+        <name>patient_id_4</name>
+      </field>
+      <field>
+        <name>age_at_initiation_1</name>
+      </field>
+      <field>
+        <name>age_in_days_1</name>
+      </field>
+      <field>
+        <name>person_id</name>
+      </field>
+      <field>
+        <name>who_stage_value_coded</name>
+      </field>
+      <field>
+        <name>who_stage_value_text</name>
+      </field>
+      <field>
+        <name>person_id_1</name>
+      </field>
+      <field>
+        <name>rfst_value_coded</name>
+      </field>
+      <field>
+        <name>rfst_value_text</name>
+      </field>
+      <field>
+        <name>person_id_2</name>
+      </field>
+      <field>
+        <name>hiv_test_date</name>
+      </field>
+      <field>
+        <name>person_id_3</name>
+      </field>
+      <field>
+        <name>test_location</name>
+      </field>
+      <field>
+        <name>master_def_who_stage_value_coded</name>
+      </field>
+      <field>
+        <name>master_def_who_stage_value_text_code</name>
+      </field>
+      <field>
+        <name>master_def_reason_for_starting_value_coded</name>
+      </field>
+      <field>
+        <name>master_def_reason_for_starting_value_text_code</name>
+      </field>
+      <field>
+        <name>reason_for_starting_mdef_concept_id</name>
+      </field>
+      <field>
+        <name>who_stage_mdef_concept_id</name>
+      </field>
+      <select_unspecified>N</select_unspecified>
+      <meta>
+        <name>re_initiated</name>
+        <rename>re_initiated</rename>
+        <type>BigNumber</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>896</xloc>
       <yloc>256</yloc>
       <draw>Y</draw>
     </GUI>
@@ -782,81 +938,162 @@ INSERT INTO temp_earliest_start_date
       <schema_name/>
     </partitioning>
     <connection>RDS</connection>
-    <sql>SELECT * FROM 
-(SELECT distinct p.patient_id, p.updated_at,'concept_name' concept_name  
-  FROM patient p JOIN 
-   patient_program pp 
-ON p.patient_id = pp.patient_id
- JOIN patient_state ps 
-ON pp.patient_program_id = ps.patient_program_id
- JOIN person pr
-ON p.patient_id = pr.person_id
-WHERE pp.program_id = 1 
-AND p.voided = 0 
-AND pp.voided = 0  
-AND ps.state = 7 
-AND ps.voided = 0) as patient_id
-
-LEFT JOIN
-
-(SELECT patient_id, date_enrolled, earliest_start_date, age_at_initiation, age_in_days
- FROM temp_earliest_start_date) 
-   AS dates_n_ages 
-ON patient_id.patient_id = dates_n_ages.patient_id
-
-
-LEFT JOIN 
-
-(SELECT patient_id, IF(re_initiated_check(patient_id, date_enrolled) = 'n/a',2441,re_initiated_check(patient_id, date_enrolled)) re_initiated,2280 as transfer_in FROM temp_earliest_start_date
-WHERE DATE(date_enrolled) != DATE(earliest_start_date)
-GROUP BY patient_id
-HAVING re_initiated != 'Re-initiated') AS transfer_in
-ON patient_id.patient_id = transfer_in.patient_id
-
-LEFT JOIN
-
-(SELECT patient_id, IF(re_initiated_check(patient_id, date_enrolled) = 'n/a',2441,re_initiated_check(patient_id, date_enrolled)) as re_initiated, 2280 as re_initiated_code
-  FROM temp_earliest_start_date
-  WHERE DATE(date_enrolled) != DATE(earliest_start_date)
-  GROUP BY patient_id
-  HAVING re_initiated = 'Re-initiated') AS re_initiated
-  ON patient_id.patient_id = re_initiated.patient_id
-
-LEFT JOIN
-
- (SELECT patient_id, age_at_initiation, age_in_days FROM temp_earliest_start_date) ages
-ON patient_id.patient_id = ages.patient_id
-
-LEFT JOIN
- 
- (SELECT person_id, value_coded who_stage_value_coded, value_text who_stage_value_text FROM obs o2 WHERE concept_id  = 7562 AND o2.voided = 0 GROUP BY person_id) as whostage
- ON patient_id.patient_id = whostage.person_id
- 
- LEFT JOIN 
- 
- (SELECT person_id, value_coded rfst_value_coded, value_text rfst_value_text FROM obs WHERE concept_id = 7563 
-AND voided = 0 GROUP BY person_id)
-AS reason_for_starting
-ON patient_id.patient_id = reason_for_starting.person_id
-
-LEFT JOIN
-
-(SELECT person_id, DATE(max(value_datetime)) hiv_test_date FROM obs WHERE concept_id = 7882 AND voided = 0
-GROUP BY person_id) AS hiv_test_date
-ON patient_id.patient_id = hiv_test_date.person_id
-
-LEFT JOIN
-
-(SELECT person_id, COALESCE(MAX(value_text), 'UNKNOWN') test_location FROM obs 
-JOIN (SELECT DATE(max(obs_datetime)) max_date from obs WHERE concept_id = 7881 AND voided  = 0 GROUP BY person_id) as max_date
-ON DATE(obs.obs_datetime) = max_date.max_date
-WHERE obs.concept_id = 7881
-GROUP BY person_id) AS hiv_test_location
-ON patient_id.patient_id = hiv_test_location.person_id
-WHERE updated_at >= '${upd_hiv_staging_info}'
-
-
-
+    <sql>SELECT
+	*
+FROM
+	(
+	SELECT
+		distinct p.patient_id,
+		p.updated_at,
+		'concept_name' concept_name
+	FROM
+		patient p
+	JOIN patient_program pp ON
+		p.patient_id = pp.patient_id
+	JOIN patient_state ps ON
+		pp.patient_program_id = ps.patient_program_id
+	JOIN person pr ON
+		p.patient_id = pr.person_id
+	WHERE
+		pp.program_id = 1
+		AND p.voided = 0
+		AND pp.voided = 0
+		AND ps.state = 7
+		AND ps.voided = 0) AS patient_id LEFT JOIN (
+	SELECT
+		patient_id,
+		date_enrolled,
+		earliest_start_date,
+		age_at_initiation,
+		age_in_days
+	FROM
+		temp_earliest_start_date) AS dates_n_ages ON
+	patient_id.patient_id = dates_n_ages.patient_id LEFT JOIN (
+	SELECT
+		DISTINCT
+	    patient_id,
+		IF(re_initiated_check(patient_id,
+		date_enrolled) = 'n/a',
+		2441,
+		re_initiated_check(patient_id,
+		date_enrolled)) re_initiated,
+		2280 as transfer_in
+	FROM
+		temp_earliest_start_date
+	WHERE
+		DATE(date_enrolled) != DATE(earliest_start_date)
+	HAVING re_initiated != 'Re-initiated') AS transfer_in ON
+	patient_id.patient_id = transfer_in.patient_id LEFT JOIN (
+	SELECT DISTINCT
+		patient_id,
+		IF(re_initiated_check(patient_id,
+		date_enrolled) = 'n/a',
+		2441,
+		re_initiated_check(patient_id,
+		date_enrolled)) as re_initiated,
+		2280 as re_initiated_code
+	FROM
+		temp_earliest_start_date
+	WHERE
+		DATE(date_enrolled) != DATE(earliest_start_date)
+	HAVING
+		re_initiated = 'Re-initiated') AS re_initiated ON
+	patient_id.patient_id = re_initiated.patient_id LEFT JOIN (
+	SELECT
+		patient_id,
+		age_at_initiation,
+		age_in_days
+	FROM
+		temp_earliest_start_date) ages ON
+	patient_id.patient_id = ages.patient_id LEFT JOIN (
+	  SELECT o.person_id,
+		  o.who_stage_value_coded,
+		  o.who_stage_value_text
+		FROM (SELECT
+        o2.obs_id,
+		o2.person_id,
+		o2.value_coded who_stage_value_coded,
+		o2.value_text who_stage_value_text
+	FROM
+		obs o2
+	WHERE
+		concept_id = 7562
+		AND o2.voided = 0) AS o 
+	LEFT JOIN 
+	(SELECT
+			obs_id,
+			person_id
+		FROM
+			obs
+		WHERE
+			concept_id = 7562
+			AND voided = 0 ) o3
+		ON	(o.person_id = o3.person_id
+		AND o.obs_id &lt; o3.obs_id)
+		WHERE o3.obs_id IS NULL) as whostage ON
+	patient_id.patient_id = whostage.person_id LEFT JOIN (
+	SELECT
+		o.person_id,
+		o.value_coded rfst_value_coded,
+		o.value_text rfst_value_text
+	FROM
+		(
+		SELECT
+			obs_id,
+			person_id,
+			value_coded,
+			value_text
+		FROM
+			obs
+		WHERE
+			concept_id = 7563
+			AND voided = 0) o
+	LEFT JOIN (
+		SELECT
+			obs_id,
+			person_id
+		FROM
+			obs
+		WHERE
+			concept_id = 7563
+			AND voided = 0 ) o2 ON
+		(o.person_id = o2.person_id
+		AND o.obs_id &lt; o2.obs_id)
+	WHERE
+		o2.obs_id IS NULL) AS reason_for_starting ON
+	patient_id.patient_id = reason_for_starting.person_id LEFT JOIN (
+	SELECT
+		person_id,
+		DATE(max(value_datetime)) hiv_test_date
+	FROM
+		obs
+	WHERE
+		concept_id = 7882
+		AND voided = 0
+	GROUP BY
+		person_id) AS hiv_test_date ON
+	patient_id.patient_id = hiv_test_date.person_id LEFT JOIN (
+	SELECT
+		person_id,
+		COALESCE(MAX(value_text), 'UNKNOWN') test_location
+	FROM
+		obs
+	JOIN (
+		SELECT
+			DATE(max(obs_datetime)) max_date
+		from
+			obs
+		WHERE
+			concept_id = 7881
+			AND voided = 0
+		GROUP BY
+			person_id) as max_date ON
+		DATE(obs.obs_datetime) = max_date.max_date
+	WHERE
+		obs.concept_id = 7881
+	GROUP BY
+		person_id) AS hiv_test_location ON
+	patient_id.patient_id = hiv_test_location.person_id
 
 
 </sql>
@@ -984,7 +1221,7 @@ WHERE updated_at >= '${upd_hiv_staging_info}'
       </output>
     </remotesteps>
     <GUI>
-      <xloc>928</xloc>
+      <xloc>896</xloc>
       <yloc>48</yloc>
       <draw>Y</draw>
     </GUI>
@@ -1148,6 +1385,48 @@ WHERE updated_at >= '${upd_hiv_staging_info}'
     <GUI>
       <xloc>560</xloc>
       <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Database lookup</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>people</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>person_id</name>
+        <field>person_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>768</xloc>
+      <yloc>256</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2020/02/22 16:39:45.734</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2020/03/23 10:22:48.163</modified_date>
+    <modified_date>2021/06/28 10:42:51.453</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -437,12 +437,12 @@
   <connection>
     <name>IDS</name>
     <server>localhost</server>
-    <type>MYSQL</type>
+    <type>POSTGRESQL</type>
     <access>Native</access>
-    <database>ids_small_site</database>
-    <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <database>ids</database>
+    <port>5432</port>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
@@ -461,7 +461,7 @@
       </attribute>
       <attribute>
         <code>PORT_NUMBER</code>
-        <attribute>3306</attribute>
+        <attribute>5432</attribute>
       </attribute>
       <attribute>
         <code>PRESERVE_RESERVED_WORD_CASE</code>
@@ -470,10 +470,6 @@
       <attribute>
         <code>QUOTE_ALL_FIELDS</code>
         <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>STREAM_RESULTS</code>
-        <attribute>Y</attribute>
       </attribute>
       <attribute>
         <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
@@ -491,17 +487,21 @@
   </connection>
   <connection>
     <name>LIMs</name>
-    <server>localhost</server>
+    <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>gw_lims</database>
+    <database>lims_rep_db</database>
     <port>3306</port>
-    <username>root</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ce10ca97bcce</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -552,6 +552,11 @@
     </hop>
     <hop>
       <from>lab_order_mapping</from>
+      <to>change_voided_to_boolean</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>change_voided_to_boolean</from>
       <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
@@ -568,7 +573,7 @@
       <schema_name/>
     </partitioning>
     <connection>IDS</connection>
-    <commit>100</commit>
+    <commit>0</commit>
     <update_bypassed>N</update_bypassed>
     <lookup>
       <schema/>
@@ -679,7 +684,88 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>784</xloc>
+      <xloc>1040</xloc>
+      <yloc>128</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>change_voided_to_boolean</name>
+    <type>SelectValues</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <fields>
+      <field>
+        <name>name</name>
+      </field>
+      <field>
+        <name>tracking_number</name>
+      </field>
+      <field>
+        <name>test_id</name>
+      </field>
+      <field>
+        <name>name_1</name>
+      </field>
+      <field>
+        <name>sending_facility</name>
+      </field>
+      <field>
+        <name>target_lab</name>
+      </field>
+      <field>
+        <name>name_2</name>
+      </field>
+      <field>
+        <name>result</name>
+      </field>
+      <field>
+        <name>time_entered</name>
+      </field>
+      <field>
+        <name>created_at</name>
+      </field>
+      <field>
+        <name>updated_at</name>
+      </field>
+      <field>
+        <name>lab_order_id</name>
+      </field>
+      <select_unspecified>N</select_unspecified>
+      <meta>
+        <name>updated_at</name>
+        <rename>updated_at</rename>
+        <type>Timestamp</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>816</xloc>
       <yloc>128</yloc>
       <draw>Y</draw>
     </GUI>
@@ -766,7 +852,6 @@
  ON s.specimen_type_id = st.id
  JOIN test_types tt 
  ON t.test_type_id = tt.id
- WHERE tr.time_entered >= '${upd_lab_test_results}'
  ORDER BY tr.time_entered</sql>
     <limit>0</limit>
     <lookup/>
