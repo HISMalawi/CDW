@@ -429,7 +429,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/13 09:10:26.516</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2021/05/23 19:34:33.815</modified_date>
+    <modified_date>2021/09/22 17:04:51.411</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -437,10 +437,10 @@
   </notepads>
   <connection>
     <name>IDS</name>
-    <server>0.0.0.0</server>
+    <server>localhost</server>
     <type>POSTGRESQL</type>
     <access>Native</access>
-    <database>ids_test</database>
+    <database>ids</database>
     <port>5432</port>
     <username>pentaho</username>
     <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
@@ -448,6 +448,18 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useServerPrepStmts</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -500,7 +512,19 @@
     <index_tablespace/>
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
         <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useServerPrepStmts</code>
         <attribute>false</attribute>
       </attribute>
       <attribute>
@@ -552,36 +576,139 @@
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Merge rows (diff)</from>
-      <to>Synchronize after merge</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Sort Target data</from>
-      <to>Merge rows (diff)</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Sort Source data</from>
-      <to>Merge rows (diff)</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>ids_people</from>
-      <to>Sort Target data</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
       <from>change_birth_est_to_int</from>
-      <to>Sort Source data</to>
+      <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Synchronize after merge</from>
+      <from>Insert / update</from>
       <to>people_error_log</to>
-      <enabled>Y</enabled>
+      <enabled>N</enabled>
     </hop>
   </order>
+  <step>
+    <name>Insert / update</name>
+    <type>InsertUpdate</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <commit>100</commit>
+    <update_bypassed>N</update_bypassed>
+    <lookup>
+      <schema/>
+      <table>people</table>
+      <key>
+        <name>person_id</name>
+        <field>person_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>person_id</name>
+        <rename>person_id</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>birthdate</name>
+        <rename>birthdate</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>birthdate_est</name>
+        <rename>birthdate_est</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>gender</name>
+        <rename>gender</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>death_date</name>
+        <rename>death_date</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>creator</name>
+        <rename>creator</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>cause_of_death</name>
+        <rename>cause_of_death</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>voided_date</name>
+        <rename>voided_date</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>dead</name>
+        <rename>dead</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>voided</name>
+        <rename>voided</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>voided_by</name>
+        <rename>voided_by</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>void_reason</name>
+        <rename>void_reason</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>app_date_created</name>
+        <rename>app_date_created</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>app_date_updated</name>
+        <rename>app_date_updated</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>created_at</name>
+        <rename>created_at</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>updated_at</name>
+        <rename>updated_at</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <update>N</update>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>640</xloc>
+      <yloc>192</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
   <step>
     <name>change_birth_est_to_int</name>
     <type>SelectValues</type>
@@ -750,356 +877,6 @@
     </GUI>
   </step>
   <step>
-    <name>rds person</name>
-    <type>TableInput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>RDS</connection>
-    <sql>SELECT person.person_id,
-    case gender when 'M' then 1 else 0 end as gender,
-    CAST(COALESCE(person.birthdate, '1900-01-01 00:00:00') AS DATE) as birthdate,
-    person.birthdate_estimated,
-    person.dead,
-    CAST(person.death_date AS DATE) AS death_date,
-    person.cause_of_death,
-    person.creator,
-    person.date_created,
-    person.changed_by,
-    person.date_changed,
-    person.voided,
-    person.voided_by,
-    person.date_voided,
-    person.void_reason,
-    person.uuid,
-    person.created_at,
-    person.updated_at    
-FROM person;</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>128</xloc>
-      <yloc>192</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Merge rows (diff)</name>
-    <type>MergeRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <keys>
-      <key>person_id</key>
-    </keys>
-    <values>
-      <value>birthdate</value>
-      <value>birthdate_est</value>
-      <value>gender</value>
-      <value>death_date</value>
-      <value>creator</value>
-      <value>cause_of_death</value>
-      <value>voided_date</value>
-      <value>dead</value>
-      <value>voided</value>
-      <value>voided_by</value>
-      <value>void_reason</value>
-      <value>app_date_created</value>
-      <value>app_date_updated</value>
-      <value>created_at</value>
-      <value>updated_at</value>
-      <value>uuid</value>
-    </values>
-    <flag_field>flagfield</flag_field>
-    <reference>Sort Target data</reference>
-    <compare>Sort Source data</compare>
-    <compare>
-    </compare>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>688</xloc>
-      <yloc>288</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Synchronize after merge</name>
-    <type>SynchronizeAfterMerge</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <commit>1000</commit>
-    <tablename_in_field>N</tablename_in_field>
-    <tablename_field/>
-    <use_batch>Y</use_batch>
-    <perform_lookup>N</perform_lookup>
-    <operation_order_field>flagfield</operation_order_field>
-    <order_insert>new</order_insert>
-    <order_update>changed</order_update>
-    <order_delete/>
-    <lookup>
-      <schema/>
-      <table>people</table>
-      <key>
-        <name>person_id</name>
-        <field>person_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <value>
-        <name>person_id</name>
-        <rename>person_id</rename>
-        <update>N</update>
-      </value>
-      <value>
-        <name>birthdate</name>
-        <rename>birthdate</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>birthdate_est</name>
-        <rename>birthdate_est</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>gender</name>
-        <rename>gender</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>death_date</name>
-        <rename>death_date</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>creator</name>
-        <rename>creator</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>cause_of_death</name>
-        <rename>cause_of_death</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>voided_date</name>
-        <rename>voided_date</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>dead</name>
-        <rename>dead</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>voided</name>
-        <rename>voided</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>voided_by</name>
-        <rename>voided_by</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>void_reason</name>
-        <rename>void_reason</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>app_date_created</name>
-        <rename>app_date_created</rename>
-        <update>N</update>
-      </value>
-      <value>
-        <name>app_date_updated</name>
-        <rename>app_date_updated</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>created_at</name>
-        <rename>created_at</rename>
-        <update>N</update>
-      </value>
-      <value>
-        <name>updated_at</name>
-        <rename>updated_at</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>uuid</name>
-        <rename>uuid</rename>
-        <update>N</update>
-      </value>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>896</xloc>
-      <yloc>288</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Sort Target data</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>N</unique_rows>
-    <fields>
-      <field>
-        <name>person_id</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>576</xloc>
-      <yloc>368</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Sort Source data</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>N</unique_rows>
-    <fields>
-      <field>
-        <name>person_id</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>576</xloc>
-      <yloc>192</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>ids_people</name>
-    <type>TableInput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <sql>SELECT
- *
-FROM people
-</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>N</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>384</xloc>
-      <yloc>368</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
     <name>people_error_log</name>
     <type>TextFileOutput</type>
     <description/>
@@ -1151,16 +928,66 @@ FROM people
       </output>
     </remotesteps>
     <GUI>
-      <xloc>896</xloc>
-      <yloc>432</yloc>
+      <xloc>640</xloc>
+      <yloc>384</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>rds person</name>
+    <type>TableInput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <sql>SELECT person.person_id,
+    case gender when 'M' then 1 else 0 end as gender,
+    CAST(COALESCE(person.birthdate, '1900-01-01 00:00:00') AS DATE) as birthdate,
+    person.birthdate_estimated,
+    person.dead,
+    CAST(person.death_date AS DATE) AS death_date,
+    person.cause_of_death,
+    person.creator,
+    person.date_created,
+    person.changed_by,
+    person.date_changed,
+    person.voided,
+    person.voided_by,
+    person.date_voided,
+    person.void_reason,
+    person.uuid,
+    person.created_at,
+    person.updated_at    
+FROM person;</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>Y</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>128</xloc>
+      <yloc>192</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step_error_handling>
     <error>
-      <source_step>Synchronize after merge</source_step>
+      <source_step>Insert / update</source_step>
       <target_step>people_error_log</target_step>
-      <is_enabled>Y</is_enabled>
+      <is_enabled>N</is_enabled>
       <nr_valuename/>
       <descriptions_valuename/>
       <fields_valuename/>

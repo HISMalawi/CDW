@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2020/02/22 16:39:45.734</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2021/06/28 10:42:51.453</modified_date>
+    <modified_date>2022/02/22 19:35:48.961</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -447,6 +447,18 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useServerPrepStmts</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -486,11 +498,11 @@
     </attributes>
   </connection>
   <connection>
-    <name>LIMs</name>
+    <name>RDS</name>
     <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>lims_rep_db</database>
+    <database>rds_b2c</database>
     <port>3306</port>
     <username>pentaho</username>
     <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
@@ -499,7 +511,19 @@
     <index_tablespace/>
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
         <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useServerPrepStmts</code>
         <attribute>false</attribute>
       </attribute>
       <attribute>
@@ -546,12 +570,22 @@
   </connection>
   <order>
     <hop>
-      <from>lims_lab_test_results</from>
-      <to>lab_order_mapping</to>
+      <from>lab_order_obs</from>
+      <to>fetch_results</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>lab_order_mapping</from>
+      <from>fetch_results</from>
+      <to>value_numeric_or_value_text</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>value_numeric_or_value_text</from>
+      <to>concatenate_modifier_and_result</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>concatenate_modifier_and_result</from>
       <to>change_voided_to_boolean</to>
       <enabled>Y</enabled>
     </hop>
@@ -579,69 +613,29 @@
       <schema/>
       <table>lab_test_results</table>
       <key>
-        <name>lab_order_id</name>
-        <field>lab_order_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>target_lab</name>
-        <field>results_test_facility</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>name_1</name>
-        <field>test_type</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>name</name>
-        <field>sample_type</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>name_2</name>
-        <field>test_measure</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <key>
-        <name>time_entered</name>
-        <field>test_result_date</field>
+        <name>test_result_id</name>
+        <field>test_result_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>lab_order_id</name>
-        <rename>lab_order_id</rename>
+        <name>test_result_id</name>
+        <rename>test_result_id</rename>
         <update>N</update>
       </value>
       <value>
-        <name>results_test_facility</name>
-        <rename>target_lab</rename>
+        <name>lab_order_id</name>
+        <rename>lab_order_id</rename>
         <update>Y</update>
       </value>
       <value>
         <name>test_type</name>
-        <rename>name_1</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>sample_type</name>
-        <rename>name</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>test_measure</name>
-        <rename>name_2</rename>
+        <rename>test_type</rename>
         <update>Y</update>
       </value>
       <value>
         <name>test_result_date</name>
-        <rename>time_entered</rename>
+        <rename>test_result_date</rename>
         <update>Y</update>
       </value>
       <value>
@@ -651,12 +645,32 @@
       </value>
       <value>
         <name>app_date_created</name>
-        <rename>created_at</rename>
+        <rename>app_date_created</rename>
         <update>N</update>
       </value>
       <value>
         <name>app_date_updated</name>
-        <rename>updated_at</rename>
+        <rename>app_date_updated</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>voided</name>
+        <rename>voided</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>voided_by</name>
+        <rename>voided_by</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>voided_date</name>
+        <rename>voided_date</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>void_reason</name>
+        <rename>void_reason</rename>
         <update>Y</update>
       </value>
       <value>
@@ -670,9 +684,9 @@
         <update>Y</update>
       </value>
       <value>
-        <name>sending_facility</name>
-        <rename>sending_facility</rename>
-        <update>Y</update>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <update>N</update>
       </value>
     </lookup>
     <attributes/>
@@ -684,8 +698,267 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1040</xloc>
-      <yloc>128</yloc>
+      <xloc>1280</xloc>
+      <yloc>144</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>fetch_results</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>obs</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>test_type</name>
+        <field>concept_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>lab_order_id</name>
+        <field>order_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>encounter_id</name>
+        <field>encounter_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>value_modifier</name>
+        <rename>result_modifier</rename>
+        <default/>
+        <type>None</type>
+      </value>
+      <value>
+        <name>value_numeric</name>
+        <rename>result_numeric_value</rename>
+        <default/>
+        <type>String</type>
+      </value>
+      <value>
+        <name>value_text</name>
+        <rename>result_text_value</rename>
+        <default/>
+        <type>String</type>
+      </value>
+      <value>
+        <name>obs_id</name>
+        <rename>test_result_id</rename>
+        <default/>
+        <type>BigNumber</type>
+      </value>
+      <value>
+        <name>obs_datetime</name>
+        <rename>test_result_date</rename>
+        <default/>
+        <type>Timestamp</type>
+      </value>
+      <value>
+        <name>date_created</name>
+        <rename>app_date_created</rename>
+        <default/>
+        <type>Timestamp</type>
+      </value>
+      <value>
+        <name>updated_at</name>
+        <rename>app_date_updated</rename>
+        <default/>
+        <type>Timestamp</type>
+      </value>
+      <value>
+        <name>voided</name>
+        <rename>voided</rename>
+        <default/>
+        <type>Boolean</type>
+      </value>
+      <value>
+        <name>voided_by</name>
+        <rename>voided_by</rename>
+        <default/>
+        <type>BigNumber</type>
+      </value>
+      <value>
+        <name>date_voided</name>
+        <rename>voided_date</rename>
+        <default/>
+        <type>Timestamp</type>
+      </value>
+      <value>
+        <name>void_reason</name>
+        <rename>void_reason</rename>
+        <default/>
+        <type>String</type>
+      </value>
+      <value>
+        <name>created_at</name>
+        <rename>created_at</rename>
+        <default/>
+        <type>Timestamp</type>
+      </value>
+      <value>
+        <name>updated_at</name>
+        <rename>updated_at</rename>
+        <default/>
+        <type>Timestamp</type>
+      </value>
+      <value>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <default/>
+        <type>None</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>352</xloc>
+      <yloc>144</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>lab_order_obs</name>
+    <type>TableInput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <sql>SELECT
+  concept_id
+, encounter_id
+, order_id lab_order_id
+, value_coded test_type
+FROM obs
+WHERE concept_id = 9737
+</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>48</xloc>
+      <yloc>144</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>value_numeric_or_value_text</name>
+    <type>Calculator</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>select_not_null_result</field_name>
+      <calc_type>NVL</calc_type>
+      <field_a>result_text_value</field_a>
+      <field_b>result_numeric_value</field_b>
+      <field_c/>
+      <value_type>String</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>560</xloc>
+      <yloc>144</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>concatenate_modifier_and_result</name>
+    <type>Calculator</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>result</field_name>
+      <calc_type>ADD</calc_type>
+      <field_a>result_modifier</field_a>
+      <field_b>select_not_null_result</field_b>
+      <field_c/>
+      <value_type>String</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>832</xloc>
+      <yloc>144</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -702,46 +975,107 @@
     </partitioning>
     <fields>
       <field>
-        <name>name</name>
+        <name>concept_id</name>
+        <rename/>
       </field>
       <field>
-        <name>tracking_number</name>
-      </field>
-      <field>
-        <name>test_id</name>
-      </field>
-      <field>
-        <name>name_1</name>
-      </field>
-      <field>
-        <name>sending_facility</name>
-      </field>
-      <field>
-        <name>target_lab</name>
-      </field>
-      <field>
-        <name>name_2</name>
-      </field>
-      <field>
-        <name>result</name>
-      </field>
-      <field>
-        <name>time_entered</name>
-      </field>
-      <field>
-        <name>created_at</name>
-      </field>
-      <field>
-        <name>updated_at</name>
+        <name>encounter_id</name>
+        <rename/>
       </field>
       <field>
         <name>lab_order_id</name>
+        <rename/>
+      </field>
+      <field>
+        <name>test_type</name>
+        <rename/>
+      </field>
+      <field>
+        <name>result_modifier</name>
+        <rename/>
+      </field>
+      <field>
+        <name>result_numeric_value</name>
+        <rename/>
+      </field>
+      <field>
+        <name>result_text_value</name>
+        <rename/>
+      </field>
+      <field>
+        <name>test_result_id</name>
+        <rename/>
+      </field>
+      <field>
+        <name>test_result_date</name>
+        <rename/>
+      </field>
+      <field>
+        <name>app_date_created</name>
+        <rename/>
+      </field>
+      <field>
+        <name>app_date_updated</name>
+        <rename/>
+      </field>
+      <field>
+        <name>voided</name>
+        <rename/>
+      </field>
+      <field>
+        <name>voided_by</name>
+        <rename/>
+      </field>
+      <field>
+        <name>voided_date</name>
+        <rename/>
+      </field>
+      <field>
+        <name>void_reason</name>
+        <rename/>
+      </field>
+      <field>
+        <name>created_at</name>
+        <rename/>
+      </field>
+      <field>
+        <name>updated_at</name>
+        <rename/>
+      </field>
+      <field>
+        <name>uuid</name>
+        <rename/>
+      </field>
+      <field>
+        <name>select_not_null_result</name>
+        <rename/>
+      </field>
+      <field>
+        <name>result</name>
+        <rename/>
       </field>
       <select_unspecified>N</select_unspecified>
       <meta>
-        <name>updated_at</name>
-        <rename>updated_at</rename>
-        <type>Timestamp</type>
+        <name>voided</name>
+        <rename>voided</rename>
+        <type>Boolean</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>uuid</name>
+        <rename>uuid</rename>
+        <type>Binary</type>
         <length>-2</length>
         <precision>-2</precision>
         <conversion_mask/>
@@ -765,110 +1099,8 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>816</xloc>
-      <yloc>128</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>lab_order_mapping</name>
-    <type>DBLookup</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
-    <lookup>
-      <schema/>
-      <table>lab_orders</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>Y</eat_row_on_failure>
-      <key>
-        <name>tracking_number</name>
-        <field>tracking_number</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <value>
-        <name>lab_order_id</name>
-        <rename>lab_order_id</rename>
-        <default/>
-        <type>Integer</type>
-      </value>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>496</xloc>
-      <yloc>128</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>lims_lab_test_results</name>
-    <type>TableInput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>LIMs</connection>
-    <sql>SELECT st.name,
-       s.tracking_number,
-       tr.test_id,
-       tt.name,
-       s.sending_facility,
-       s.target_lab,      
-       m.name,
-       tr.result,
-       tr.time_entered,
-       tr.created_at,
-       tr.updated_at
- FROM specimen s
- JOIN tests t
- ON t.specimen_id = s.id
- JOIN test_results tr 
- ON tr.test_id = t.id
- JOIN measures m
- ON m.id = tr.measure_id
- JOIN specimen_types st
- ON s.specimen_type_id = st.id
- JOIN test_types tt 
- ON t.test_type_id = tt.id
- ORDER BY tr.time_entered</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>N</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>224</xloc>
-      <yloc>128</yloc>
+      <xloc>1072</xloc>
+      <yloc>144</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

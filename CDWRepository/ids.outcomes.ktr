@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 12:51:40.431</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2021/06/28 10:32:01.076</modified_date>
+    <modified_date>2021/12/03 09:42:39.247</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -447,6 +447,18 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useServerPrepStmts</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -490,7 +502,7 @@
     <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds</database>
+    <database>rds_temp</database>
     <port>3306</port>
     <username>pentaho</username>
     <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
@@ -499,7 +511,19 @@
     <index_tablespace/>
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
         <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useServerPrepStmts</code>
         <attribute>false</attribute>
       </attribute>
       <attribute>
@@ -566,44 +590,24 @@
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Merge rows (diff)</from>
-      <to>Synchronize after merge</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>ids_outcomes</from>
-      <to>target</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>source</from>
-      <to>Merge rows (diff)</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>target</from>
-      <to>Merge rows (diff)</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Synchronize after merge</from>
-      <to>outcome_errors</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
       <from>change_voided_to_boolean</from>
       <to>Database lookup</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>Database lookup</from>
-      <to>source</to>
+      <to>Insert / update</to>
       <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Insert / update</from>
+      <to>outcome_errors</to>
+      <enabled>N</enabled>
     </hop>
   </order>
   <step>
-    <name>Merge rows (diff)</name>
-    <type>MergeRows</type>
+    <name>Database lookup</name>
+    <type>DBLookup</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -612,32 +616,23 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <keys>
-      <key>outcome_id</key>
-    </keys>
-    <values>
-      <value>outcome_id</value>
-      <value>person_id</value>
-      <value>concept_id</value>
-      <value>outcome_reason</value>
-      <value>outcome_source</value>
-      <value>voided</value>
-      <value>voided_by</value>
-      <value>voided_date</value>
-      <value>void_reason</value>
-      <value>app_date_created</value>
-      <value>app_date_updated</value>
-      <value>created_at</value>
-      <value>updated_at</value>
-      <value>start_date</value>
-      <value>end_date</value>
-      <value>uuid</value>
-    </values>
-    <flag_field>flagfield</flag_field>
-    <reference>target</reference>
-    <compare>source</compare>
-    <compare>
-    </compare>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>people</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>person_id</name>
+        <field>person_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+    </lookup>
     <attributes/>
     <cluster_schema/>
     <remotesteps>
@@ -647,14 +642,14 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1504</xloc>
-      <yloc>352</yloc>
+      <xloc>1312</xloc>
+      <yloc>224</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Synchronize after merge</name>
-    <type>SynchronizeAfterMerge</type>
+    <name>Insert / update</name>
+    <type>InsertUpdate</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -665,14 +660,7 @@
     </partitioning>
     <connection>IDS</connection>
     <commit>100</commit>
-    <tablename_in_field>N</tablename_in_field>
-    <tablename_field/>
-    <use_batch>N</use_batch>
-    <perform_lookup>N</perform_lookup>
-    <operation_order_field>flagfield</operation_order_field>
-    <order_insert>new</order_insert>
-    <order_update>changed</order_update>
-    <order_delete/>
+    <update_bypassed>N</update_bypassed>
     <lookup>
       <schema/>
       <table>outcomes</table>
@@ -772,8 +760,8 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1728</xloc>
-      <yloc>352</yloc>
+      <xloc>1584</xloc>
+      <yloc>224</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -928,56 +916,6 @@
     </GUI>
   </step>
   <step>
-    <name>ids_outcomes</name>
-    <type>TableInput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <sql>SELECT
-  outcome_id
-, person_id
-, concept_id
-, outcome_reason
-, outcome_source
-, voided
-, voided_by
-, voided_date
-, void_reason
-, app_date_created
-, app_date_updated
-, created_at
-, updated_at
-, start_date
-, end_date
-, uuid
-FROM outcomes
-</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>N</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1312</xloc>
-      <yloc>560</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
     <name>outcome_errors</name>
     <type>TextFileOutput</type>
     <description/>
@@ -1029,8 +967,8 @@ FROM outcomes
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1728</xloc>
-      <yloc>512</yloc>
+      <xloc>1584</xloc>
+      <yloc>400</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -1250,135 +1188,9 @@ ON ps.patient_program_id = pp.patient_program_id</sql>
       <draw>Y</draw>
     </GUI>
   </step>
-  <step>
-    <name>source</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>N</unique_rows>
-    <fields>
-      <field>
-        <name>outcome_id</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1312</xloc>
-      <yloc>224</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>target</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>N</unique_rows>
-    <fields>
-      <field>
-        <name>outcome_id</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1312</xloc>
-      <yloc>416</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Database lookup</name>
-    <type>DBLookup</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
-    <lookup>
-      <schema/>
-      <table>people</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>Y</eat_row_on_failure>
-      <key>
-        <name>person_id</name>
-        <field>person_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1184</xloc>
-      <yloc>208</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
   <step_error_handling>
     <error>
-      <source_step>Synchronize after merge</source_step>
+      <source_step>Insert / update</source_step>
       <target_step>outcome_errors</target_step>
       <is_enabled>Y</is_enabled>
       <nr_valuename/>

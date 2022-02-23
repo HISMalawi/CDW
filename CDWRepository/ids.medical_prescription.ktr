@@ -429,7 +429,7 @@
     <created_user>-</created_user>
     <created_date>2020/02/12 15:04:48.701</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2021/06/28 10:41:18.857</modified_date>
+    <modified_date>2021/09/24 11:38:36.484</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -448,6 +448,18 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useServerPrepStmts</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -491,7 +503,7 @@
     <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds_temp</database>
+    <database>rds</database>
     <port>3306</port>
     <username>pentaho</username>
     <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
@@ -500,7 +512,19 @@
     <index_tablespace/>
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
         <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useServerPrepStmts</code>
         <attribute>false</attribute>
       </attribute>
       <attribute>
@@ -557,19 +581,9 @@
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>drug_id</from>
-      <to>days_all_pills_to_last</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>days_all_pills_to_last</from>
-      <to>change_voided_to_boolean</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
       <from>Insert / update</from>
       <to>medication_precriptions</to>
-      <enabled>Y</enabled>
+      <enabled>N</enabled>
     </hop>
     <hop>
       <from>change_voided_to_boolean</from>
@@ -579,6 +593,11 @@
     <hop>
       <from>lookup encounter </from>
       <to>Insert / update</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>drug_id</from>
+      <to>change_voided_to_boolean</to>
       <enabled>Y</enabled>
     </hop>
   </order>
@@ -649,13 +668,30 @@
     <quoteString>N</quoteString>
     <sql>DROP TABLE IF EXISTS pillcount;
 
-CREATE TABLE pillcount SELECT o.order_id,
+DROP TABLE IF EXISTS con;
+
+DROP TABLE IF EXISTS drug_inventory;
+
+CREATE TABLE con AS SELECT DISTINCT concept_id FROM drug d UNION SELECT 2540 concept_id;
+
+CREATE TABLE drug_inventory SELECT o.order_id, drug_inventory_id FROM orders o JOIN drug_order do 
+ON o.order_id = do.order_id;
+
+ALTER TABLE con add index(concept_id);
+
+ALTER TABLE drug_inventory add index(drug_inventory_id);
+
+ALTER TABLE drug_inventory add index(order_id);
+
+	
+
+CREATE TABLE pillcount SELECT ob.order_id,
 (COALESCE(SUM(ob.value_numeric),0) + COALESCE(SUM(ob.value_text),0)) pillcount
 FROM obs ob
-JOIN drug_order do ON ob.order_id = do.order_id
-JOIN orders o ON do.order_id = o.order_id
-WHERE (ob.concept_id = 2540 OR ob.concept_id IN (SELECT concept_id FROM drug d))
-GROUP BY ob.person_id,order_id,do.drug_inventory_id
+JOIN drug_inventory di
+ON ob.order_id = di.order_id
+JOIN con ON ob.concept_id = con.concept_id
+GROUP BY ob.person_id,ob.order_id,di.drug_inventory_id
 ORDER BY order_id;
 
 ALTER TABLE pillcount add index(order_id);</sql>
@@ -793,8 +829,8 @@ ALTER TABLE pillcount add index(order_id);</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1232</xloc>
-      <yloc>256</yloc>
+      <xloc>1152</xloc>
+      <yloc>48</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -820,21 +856,23 @@ ALTER TABLE pillcount add index(order_id);</sql>
       </field>
       <field>
         <name>encounter_id</name>
+        <rename/>
       </field>
       <field>
         <name>start_date</name>
-      </field>
-      <field>
-        <name>days_all_pills_to_last</name>
+        <rename/>
       </field>
       <field>
         <name>instructions</name>
+        <rename/>
       </field>
       <field>
         <name>voided</name>
+        <rename/>
       </field>
       <field>
         <name>voided_by</name>
+        <rename/>
       </field>
       <field>
         <name>date_voided</name>
@@ -842,9 +880,11 @@ ALTER TABLE pillcount add index(order_id);</sql>
       </field>
       <field>
         <name>void_reason</name>
+        <rename/>
       </field>
       <field>
         <name>creator</name>
+        <rename/>
       </field>
       <field>
         <name>date_created</name>
@@ -856,12 +896,19 @@ ALTER TABLE pillcount add index(order_id);</sql>
       </field>
       <field>
         <name>created_at</name>
+        <rename/>
       </field>
       <field>
         <name>updated_at</name>
+        <rename/>
       </field>
       <field>
         <name>uuid</name>
+        <rename/>
+      </field>
+      <field>
+        <name>auto_expire_date</name>
+        <rename>end_date</rename>
       </field>
       <select_unspecified>N</select_unspecified>
       <meta>
@@ -898,23 +945,6 @@ ALTER TABLE pillcount add index(order_id);</sql>
         <currency_symbol/>
         <storage_type/>
       </meta>
-      <meta>
-        <name>days_all_pills_to_last</name>
-        <rename>end_date</rename>
-        <type>Timestamp</type>
-        <length>-2</length>
-        <precision>-2</precision>
-        <conversion_mask/>
-        <date_format_lenient>false</date_format_lenient>
-        <date_format_locale/>
-        <date_format_timezone/>
-        <lenient_string_to_number>false</lenient_string_to_number>
-        <encoding/>
-        <decimal_symbol/>
-        <grouping_symbol/>
-        <currency_symbol/>
-        <storage_type/>
-      </meta>
     </fields>
     <attributes/>
     <cluster_schema/>
@@ -925,8 +955,8 @@ ALTER TABLE pillcount add index(order_id);</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>816</xloc>
-      <yloc>256</yloc>
+      <xloc>608</xloc>
+      <yloc>48</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -958,13 +988,13 @@ ALTER TABLE pillcount add index(order_id);</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>816</xloc>
-      <yloc>48</yloc>
-      <draw>Y</draw>
+      <xloc>544</xloc>
+      <yloc>208</yloc>
+      <draw>N</draw>
     </GUI>
   </step>
   <step>
-    <name>days_pills_to_last</name>
+    <name>end_date</name>
     <type>Calculator</type>
     <description/>
     <distribute>N</distribute>
@@ -976,12 +1006,12 @@ ALTER TABLE pillcount add index(order_id);</sql>
     </partitioning>
     <failIfNoFile>Y</failIfNoFile>
     <calculation>
-      <field_name>days_all_pills_to_last</field_name>
-      <calc_type>DIVIDE</calc_type>
-      <field_a>total_pills</field_a>
-      <field_b>equivalent_daily_dose</field_b>
+      <field_name>end_date</field_name>
+      <calc_type>ADD_DAYS</calc_type>
+      <field_a>start_date</field_a>
+      <field_b>days_all_pills_to_last</field_b>
       <field_c/>
-      <value_type>Integer</value_type>
+      <value_type>Timestamp</value_type>
       <value_length>-1</value_length>
       <value_precision>-1</value_precision>
       <remove>N</remove>
@@ -999,8 +1029,8 @@ ALTER TABLE pillcount add index(order_id);</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1312</xloc>
-      <yloc>560</yloc>
+      <xloc>816</xloc>
+      <yloc>48</yloc>
       <draw>N</draw>
     </GUI>
   </step>
@@ -1053,7 +1083,49 @@ ALTER TABLE pillcount add index(order_id);</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>400</xloc>
+      <xloc>304</xloc>
+      <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>lookup encounter </name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>encounters</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>encounter_id</name>
+        <field>encounter_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>928</xloc>
       <yloc>48</yloc>
       <draw>Y</draw>
     </GUI>
@@ -1110,8 +1182,8 @@ ALTER TABLE pillcount add index(order_id);</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1232</xloc>
-      <yloc>464</yloc>
+      <xloc>1152</xloc>
+      <yloc>240</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -1152,7 +1224,8 @@ FROM orders o
 	ON o.order_id = d.order_id
   LEFT JOIN pillcount
     ON (o.order_id = pillcount.order_id)
-WHERE o.order_type_id = 1</sql>
+WHERE o.order_type_id = 1
+AND d.drug_inventory_id &lt;= 1057</sql>
     <limit>0</limit>
     <lookup/>
     <execute_each_row>N</execute_each_row>
@@ -1172,98 +1245,27 @@ WHERE o.order_type_id = 1</sql>
       <draw>Y</draw>
     </GUI>
   </step>
-  <step>
-    <name>total pills</name>
-    <type>Calculator</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <failIfNoFile>Y</failIfNoFile>
-    <calculation>
-      <field_name>total_pills</field_name>
-      <calc_type>ADD</calc_type>
-      <field_a>quantity</field_a>
-      <field_b>pillcount</field_b>
-      <field_c/>
-      <value_type>Integer</value_type>
-      <value_length>-1</value_length>
-      <value_precision>-1</value_precision>
-      <remove>N</remove>
-      <conversion_mask/>
-      <decimal_symbol/>
-      <grouping_symbol/>
-      <currency_symbol/>
-    </calculation>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>784</xloc>
-      <yloc>224</yloc>
-      <draw>N</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>lookup encounter </name>
-    <type>DBLookup</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
-    <lookup>
-      <schema/>
-      <table>encounters</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>Y</eat_row_on_failure>
-      <key>
-        <name>encounter_id</name>
-        <field>encounter_id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1056</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
   <step_error_handling>
     <error>
       <source_step>Insert / update</source_step>
       <target_step>medication_precriptions</target_step>
-      <is_enabled>Y</is_enabled>
+      <is_enabled>N</is_enabled>
       <nr_valuename/>
       <descriptions_valuename/>
       <fields_valuename/>
       <codes_valuename/>
+      <max_errors/>
+      <max_pct_errors/>
+      <min_pct_rows/>
+    </error>
+    <error>
+      <source_step>change_voided_to_boolean</source_step>
+      <target_step>Text file output</target_step>
+      <is_enabled>Y</is_enabled>
+      <nr_valuename>err_num</nr_valuename>
+      <descriptions_valuename>err_desc</descriptions_valuename>
+      <fields_valuename>err_feild_name</fields_valuename>
+      <codes_valuename>err_code</codes_valuename>
       <max_errors/>
       <max_pct_errors/>
       <min_pct_rows/>

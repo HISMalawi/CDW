@@ -429,7 +429,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 11:06:40.673</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2021/06/30 15:18:57.825</modified_date>
+    <modified_date>2021/09/22 17:04:17.025</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -448,6 +448,18 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useServerPrepStmts</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -500,7 +512,19 @@
     <index_tablespace/>
     <attributes>
       <attribute>
+        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
         <code>EXTRA_OPTION_MYSQL.useSSL</code>
+        <attribute>false</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_MYSQL.useServerPrepStmts</code>
         <attribute>false</attribute>
       </attribute>
       <attribute>
@@ -577,38 +601,13 @@
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Sort Source data</from>
-      <to>Merge rows (diff)</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>ids_encounters</from>
-      <to>Sort Target data</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Merge rows (diff)</from>
-      <to>Synchronize after merge</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Sort Target data</from>
-      <to>Merge rows (diff)</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Synchronize after merge</from>
-      <to>Text file output</to>
-      <enabled>N</enabled>
-    </hop>
-    <hop>
       <from>change_to_bolean</from>
       <to>Database lookup</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>Database lookup</from>
-      <to>Sort Source data</to>
+      <to>Insert / update</to>
       <enabled>Y</enabled>
     </hop>
   </order>
@@ -655,226 +654,8 @@
     </GUI>
   </step>
   <step>
-    <name>Merge rows (diff)</name>
-    <type>MergeRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <keys>
-      <key>encounter_id</key>
-    </keys>
-    <values>
-      <value>encounter_type_id</value>
-      <value>program_id</value>
-      <value>person_id</value>
-      <value>visit_date</value>
-      <value>voided</value>
-      <value>voided_by</value>
-      <value>voided_date</value>
-      <value>void_reason</value>
-      <value>creator</value>
-      <value>app_date_created</value>
-      <value>app_date_updated</value>
-      <value>created_at</value>
-      <value>updated_at</value>
-    </values>
-    <flag_field>flagfield</flag_field>
-    <reference>Sort Target data</reference>
-    <compare>Sort Source data</compare>
-    <compare>
-    </compare>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1472</xloc>
-      <yloc>272</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Select HTS encounters</name>
-    <type>FilterRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <send_true_to>hts_encounter_type_id</send_true_to>
-    <send_false_to>encounter_type_id</send_false_to>
-    <compare>
-      <condition>
-        <negated>N</negated>
-        <conditions>
-          <condition>
-            <negated>N</negated>
-            <leftvalue>program_id</leftvalue>
-            <function>=</function>
-            <rightvalue/>
-            <value>
-              <name>constant</name>
-              <type>Integer</type>
-              <text>18</text>
-              <length>-1</length>
-              <precision>0</precision>
-              <isnull>N</isnull>
-              <mask>####0;-####0</mask>
-            </value>
-          </condition>
-          <condition>
-            <negated>N</negated>
-            <operator>AND</operator>
-            <conditions>
-              <condition>
-                <negated>N</negated>
-                <leftvalue>encounter_type</leftvalue>
-                <function>=</function>
-                <rightvalue/>
-                <value>
-                  <name>constant</name>
-                  <type>Integer</type>
-                  <text>125</text>
-                  <length>-1</length>
-                  <precision>0</precision>
-                  <isnull>N</isnull>
-                  <mask>####0;-####0</mask>
-                </value>
-              </condition>
-              <condition>
-                <negated>N</negated>
-                <operator>OR</operator>
-                <leftvalue>encounter_type</leftvalue>
-                <function>=</function>
-                <rightvalue/>
-                <value>
-                  <name>constant</name>
-                  <type>Integer</type>
-                  <text>124</text>
-                  <length>-1</length>
-                  <precision>0</precision>
-                  <isnull>N</isnull>
-                  <mask>####0;-####0</mask>
-                </value>
-              </condition>
-            </conditions>
-          </condition>
-        </conditions>
-      </condition>
-    </compare>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>464</xloc>
-      <yloc>176</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Sort Source data</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>N</unique_rows>
-    <fields>
-      <field>
-        <name>encounter_id</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1360</xloc>
-      <yloc>176</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Sort Target data</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>N</unique_rows>
-    <fields>
-      <field>
-        <name>encounter_id</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1360</xloc>
-      <yloc>352</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Synchronize after merge</name>
-    <type>SynchronizeAfterMerge</type>
+    <name>Insert / update</name>
+    <type>InsertUpdate</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -884,15 +665,8 @@
       <schema_name/>
     </partitioning>
     <connection>IDS</connection>
-    <commit>1000</commit>
-    <tablename_in_field>N</tablename_in_field>
-    <tablename_field/>
-    <use_batch>Y</use_batch>
-    <perform_lookup>N</perform_lookup>
-    <operation_order_field>flagfield</operation_order_field>
-    <order_insert>new</order_insert>
-    <order_update>changed</order_update>
-    <order_delete/>
+    <commit>100</commit>
+    <update_bypassed>N</update_bypassed>
     <lookup>
       <schema/>
       <table>encounters</table>
@@ -987,14 +761,14 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1680</xloc>
-      <yloc>272</yloc>
+      <xloc>1424</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Text file output</name>
-    <type>TextFileOutput</type>
+    <name>Select HTS encounters</name>
+    <type>FilterRows</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -1003,38 +777,67 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <separator>,</separator>
-    <enclosure>"</enclosure>
-    <enclosure_forced>N</enclosure_forced>
-    <enclosure_fix_disabled>N</enclosure_fix_disabled>
-    <header>Y</header>
-    <footer>N</footer>
-    <format>DOS</format>
-    <compression>None</compression>
-    <encoding/>
-    <endedLine/>
-    <fileNameInField>N</fileNameInField>
-    <fileNameField/>
-    <create_parent_folder>Y</create_parent_folder>
-    <file>
-      <name>encounters_error_log</name>
-      <servlet_output>N</servlet_output>
-      <do_not_open_new_file_init>N</do_not_open_new_file_init>
-      <extention>csv</extention>
-      <append>N</append>
-      <split>N</split>
-      <haspartno>N</haspartno>
-      <add_date>N</add_date>
-      <add_time>N</add_time>
-      <SpecifyFormat>N</SpecifyFormat>
-      <date_time_format/>
-      <add_to_result_filenames>Y</add_to_result_filenames>
-      <pad>N</pad>
-      <fast_dump>N</fast_dump>
-      <splitevery/>
-    </file>
-    <fields>
-    </fields>
+    <send_true_to>hts_encounter_type_id</send_true_to>
+    <send_false_to>encounter_type_id</send_false_to>
+    <compare>
+      <condition>
+        <negated>N</negated>
+        <conditions>
+          <condition>
+            <negated>N</negated>
+            <leftvalue>program_id</leftvalue>
+            <function>=</function>
+            <rightvalue/>
+            <value>
+              <name>constant</name>
+              <type>Integer</type>
+              <text>18</text>
+              <length>-1</length>
+              <precision>0</precision>
+              <isnull>N</isnull>
+              <mask>####0;-####0</mask>
+            </value>
+          </condition>
+          <condition>
+            <negated>N</negated>
+            <operator>AND</operator>
+            <conditions>
+              <condition>
+                <negated>N</negated>
+                <leftvalue>encounter_type</leftvalue>
+                <function>=</function>
+                <rightvalue/>
+                <value>
+                  <name>constant</name>
+                  <type>Integer</type>
+                  <text>125</text>
+                  <length>-1</length>
+                  <precision>0</precision>
+                  <isnull>N</isnull>
+                  <mask>####0;-####0</mask>
+                </value>
+              </condition>
+              <condition>
+                <negated>N</negated>
+                <operator>OR</operator>
+                <leftvalue>encounter_type</leftvalue>
+                <function>=</function>
+                <rightvalue/>
+                <value>
+                  <name>constant</name>
+                  <type>Integer</type>
+                  <text>124</text>
+                  <length>-1</length>
+                  <precision>0</precision>
+                  <isnull>N</isnull>
+                  <mask>####0;-####0</mask>
+                </value>
+              </condition>
+            </conditions>
+          </condition>
+        </conditions>
+      </condition>
+    </compare>
     <attributes/>
     <cluster_schema/>
     <remotesteps>
@@ -1044,8 +847,8 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1680</xloc>
-      <yloc>512</yloc>
+      <xloc>464</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -1322,68 +1125,7 @@ FROM encounter e
       <draw>Y</draw>
     </GUI>
   </step>
-  <step>
-    <name>ids_encounters</name>
-    <type>TableInput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>IDS</connection>
-    <sql>SELECT
-  encounter_id
-, encounter_type_id
-, program_id
-, person_id
-, visit_date
-, voided
-, voided_by
-, voided_date
-, void_reason
-, creator
-, app_date_created
-, app_date_updated
-, created_at
-, updated_at
-, uuid
-FROM encounters
-</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>N</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1360</xloc>
-      <yloc>464</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
   <step_error_handling>
-    <error>
-      <source_step>Synchronize after merge</source_step>
-      <target_step>Text file output</target_step>
-      <is_enabled>N</is_enabled>
-      <nr_valuename/>
-      <descriptions_valuename/>
-      <fields_valuename/>
-      <codes_valuename/>
-      <max_errors/>
-      <max_pct_errors/>
-      <min_pct_rows/>
-    </error>
   </step_error_handling>
   <slave-step-copy-partition-distribution>
   </slave-step-copy-partition-distribution>

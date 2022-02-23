@@ -1,10 +1,11 @@
 <transformation>
   <info>
-    <name>ids.medicationAdherences</name>
+    <name>ids.medical_prescription</name>
     <description/>
     <extended_description/>
     <trans_version/>
     <trans_type>Normal</trans_type>
+    <trans_status>0</trans_status>
     <directory>/</directory>
     <parameters>
     </parameters>
@@ -426,9 +427,9 @@
     <clusterschemas>
     </clusterschemas>
     <created_user>-</created_user>
-    <created_date>2019/12/14 11:39:49.780</created_date>
+    <created_date>2020/02/12 15:04:48.701</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2021/09/18 16:15:04.623</modified_date>
+    <modified_date>2021/07/16 09:55:47.523</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -447,18 +448,6 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
-      <attribute>
-        <code>EXTRA_OPTION_POSTGRESQL.rewriteBatchedStatements</code>
-        <attribute>true</attribute>
-      </attribute>
-      <attribute>
-        <code>EXTRA_OPTION_POSTGRESQL.useCompression</code>
-        <attribute>true</attribute>
-      </attribute>
-      <attribute>
-        <code>EXTRA_OPTION_POSTGRESQL.useServerPrepStmts</code>
-        <attribute>false</attribute>
-      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
@@ -499,10 +488,10 @@
   </connection>
   <connection>
     <name>RDS</name>
-    <server>0.0.0.0</server>
+    <server>localhost</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds_booked_appointments</database>
+    <database>rds_meds</database>
     <port>3306</port>
     <username>pentaho</username>
     <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
@@ -511,19 +500,7 @@
     <index_tablespace/>
     <attributes>
       <attribute>
-        <code>EXTRA_OPTION_MYSQL.rewriteBatchedStatements</code>
-        <attribute>true</attribute>
-      </attribute>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useCompression</code>
-        <attribute>true</attribute>
-      </attribute>
-      <attribute>
         <code>EXTRA_OPTION_MYSQL.useSSL</code>
-        <attribute>false</attribute>
-      </attribute>
-      <attribute>
-        <code>EXTRA_OPTION_MYSQL.useServerPrepStmts</code>
         <attribute>false</attribute>
       </attribute>
       <attribute>
@@ -570,36 +547,90 @@
   </connection>
   <order>
     <hop>
-      <from>medication_adherences</from>
+      <from>order - medical_prescription</from>
       <to>drug_id</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>drug_id</from>
-      <to>remove_%</to>
+      <to>days_all_pills_to_last</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>remove_%</from>
-      <to>if_value_numeric_isnull_put_value_text</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>if_value_numeric_isnull_put_value_text</from>
-      <to>change_birth_est_to_int</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>change_birth_est_to_int</from>
-      <to>Insert / update</to>
+      <from>days_all_pills_to_last</from>
+      <to>change_voided_to_boolean</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>Insert / update</from>
+      <to>medication_precriptions</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>change_voided_to_boolean</from>
+      <to>lookup encounter </to>
+      <enabled>N</enabled>
+    </hop>
+    <hop>
+      <from>lookup encounter </from>
+      <to>Insert / update</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>change_voided_to_boolean</from>
       <to>Text file output</to>
       <enabled>Y</enabled>
     </hop>
   </order>
+  <step>
+    <name>Call Pill Count procedure</name>
+    <type>DBProc</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <procedure>drug_pill_count</procedure>
+    <lookup>
+      <arg>
+        <name>patient_id</name>
+        <direction>IN</direction>
+        <type>BigNumber</type>
+      </arg>
+      <arg>
+        <name>drug_inventory_id</name>
+        <direction>IN</direction>
+        <type>Integer</type>
+      </arg>
+      <arg>
+        <name>start_date</name>
+        <direction>IN</direction>
+        <type>Timestamp</type>
+      </arg>
+    </lookup>
+    <result>
+      <name>pillcount</name>
+      <type>Integer</type>
+    </result>
+    <auto_commit>Y</auto_commit>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>368</xloc>
+      <yloc>176</yloc>
+      <draw>N</draw>
+    </GUI>
+  </step>
   <step>
     <name>Insert / update</name>
     <type>InsertUpdate</type>
@@ -613,34 +644,44 @@
     </partitioning>
     <connection>IDS</connection>
     <commit>100</commit>
-    <update_bypassed>Y</update_bypassed>
+    <update_bypassed>N</update_bypassed>
     <lookup>
       <schema/>
-      <table>medication_adherences</table>
+      <table>medication_prescriptions</table>
       <key>
-        <name>obs_id</name>
-        <field>adherence_id</field>
+        <name>medication_prescription_id</name>
+        <field>medication_prescription_id</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>adherence_id</name>
-        <rename>obs_id</rename>
+        <name>medication_prescription_id</name>
+        <rename>medication_prescription_id</rename>
         <update>N</update>
       </value>
       <value>
-        <name>medication_dispensation_id</name>
-        <rename>order_id</rename>
-        <update>Y</update>
-      </value>
-      <value>
         <name>drug_id</name>
-        <rename>dispensed_drug_id</rename>
+        <rename>drug_id</rename>
         <update>Y</update>
       </value>
       <value>
-        <name>adherence</name>
-        <rename>adherence</rename>
+        <name>encounter_id</name>
+        <rename>encounter_id</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>start_date</name>
+        <rename>start_date</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>end_date</name>
+        <rename>end_date</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>instructions</name>
+        <rename>instructions</rename>
         <update>Y</update>
       </value>
       <value>
@@ -655,7 +696,7 @@
       </value>
       <value>
         <name>voided_date</name>
-        <rename>date_voided</rename>
+        <rename>voided_date</rename>
         <update>Y</update>
       </value>
       <value>
@@ -664,24 +705,29 @@
         <update>Y</update>
       </value>
       <value>
-        <name>app_date_created</name>
-        <rename>date_created</rename>
-        <update>Y</update>
-      </value>
-      <value>
-        <name>app_date_updated</name>
-        <rename>date_created</rename>
+        <name>creator</name>
+        <rename>creator</rename>
         <update>N</update>
       </value>
       <value>
-        <name>updated_at</name>
-        <rename>updated_at</rename>
+        <name>app_date_created</name>
+        <rename>app_date_created</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>app_date_updated</name>
+        <rename>app_date_updated</rename>
         <update>Y</update>
       </value>
       <value>
         <name>created_at</name>
         <rename>created_at</rename>
         <update>N</update>
+      </value>
+      <value>
+        <name>updated_at</name>
+        <rename>updated_at</rename>
+        <update>Y</update>
       </value>
       <value>
         <name>uuid</name>
@@ -698,70 +744,13 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1328</xloc>
+      <xloc>1232</xloc>
       <yloc>240</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Text file output</name>
-    <type>TextFileOutput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <separator>;</separator>
-    <enclosure>"</enclosure>
-    <enclosure_forced>N</enclosure_forced>
-    <enclosure_fix_disabled>N</enclosure_fix_disabled>
-    <header>Y</header>
-    <footer>N</footer>
-    <format>DOS</format>
-    <compression>None</compression>
-    <encoding/>
-    <endedLine/>
-    <fileNameInField>N</fileNameInField>
-    <fileNameField/>
-    <create_parent_folder>Y</create_parent_folder>
-    <file>
-      <name>adherence_error_log</name>
-      <servlet_output>N</servlet_output>
-      <do_not_open_new_file_init>N</do_not_open_new_file_init>
-      <extention>log</extention>
-      <append>N</append>
-      <split>N</split>
-      <haspartno>N</haspartno>
-      <add_date>N</add_date>
-      <add_time>N</add_time>
-      <SpecifyFormat>N</SpecifyFormat>
-      <date_time_format/>
-      <add_to_result_filenames>Y</add_to_result_filenames>
-      <pad>N</pad>
-      <fast_dump>N</fast_dump>
-      <splitevery/>
-    </file>
-    <fields>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>1328</xloc>
-      <yloc>448</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>change_birth_est_to_int</name>
+    <name>change_voided_to_boolean</name>
     <type>SelectValues</type>
     <description/>
     <distribute>Y</distribute>
@@ -773,55 +762,68 @@
     </partitioning>
     <fields>
       <field>
-        <name>obs_id</name>
-      </field>
-      <field>
         <name>order_id</name>
+        <rename>medication_prescription_id</rename>
       </field>
       <field>
-        <name>order_id_1</name>
+        <name>master_def_drug_id</name>
+        <rename>drug_id</rename>
       </field>
       <field>
-        <name>order_id_2</name>
+        <name>encounter_id</name>
+        <rename/>
       </field>
       <field>
-        <name>value_numeric</name>
+        <name>start_date</name>
+        <rename/>
       </field>
       <field>
-        <name>value_text</name>
+        <name>days_all_pills_to_last</name>
+        <rename/>
+      </field>
+      <field>
+        <name>instructions</name>
+        <rename/>
       </field>
       <field>
         <name>voided</name>
+        <rename/>
       </field>
       <field>
         <name>voided_by</name>
+        <rename/>
       </field>
       <field>
         <name>date_voided</name>
+        <rename>voided_date</rename>
       </field>
       <field>
         <name>void_reason</name>
+        <rename/>
+      </field>
+      <field>
+        <name>creator</name>
+        <rename/>
       </field>
       <field>
         <name>date_created</name>
+        <rename>app_date_created</rename>
+      </field>
+      <field>
+        <name>date_created</name>
+        <rename>app_date_updated</rename>
       </field>
       <field>
         <name>created_at</name>
+        <rename/>
       </field>
       <field>
         <name>updated_at</name>
-      </field>
-      <field>
-        <name>dispensed_drug_id</name>
-      </field>
-      <field>
-        <name>cleaned_value_text</name>
-      </field>
-      <field>
-        <name>adherence</name>
+        <rename/>
       </field>
       <field>
         <name>uuid</name>
+        <rename/>
       </field>
       <select_unspecified>N</select_unspecified>
       <meta>
@@ -858,6 +860,23 @@
         <currency_symbol/>
         <storage_type/>
       </meta>
+      <meta>
+        <name>days_all_pills_to_last</name>
+        <rename>end_date</rename>
+        <type>Timestamp</type>
+        <length>-2</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
     </fields>
     <attributes/>
     <cluster_schema/>
@@ -868,9 +887,83 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>1024</xloc>
+      <xloc>816</xloc>
       <yloc>240</yloc>
       <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>days_all_pills_to_last</name>
+    <type>Formula</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <formula>
+      <field_name>days_all_pills_to_last</field_name>
+      <formula_string>([quantity] + [pillcount])/[equivalent_daily_dose]</formula_string>
+      <value_type>Number</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <replace_field/>
+    </formula>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>816</xloc>
+      <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>days_pills_to_last</name>
+    <type>Calculator</type>
+    <description/>
+    <distribute>N</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>days_all_pills_to_last</field_name>
+      <calc_type>DIVIDE</calc_type>
+      <field_a>total_pills</field_a>
+      <field_b>equivalent_daily_dose</field_b>
+      <field_c/>
+      <value_type>Integer</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1312</xloc>
+      <yloc>560</yloc>
+      <draw>N</draw>
     </GUI>
   </step>
   <step>
@@ -890,19 +983,25 @@
     <cache_size>0</cache_size>
     <lookup>
       <schema/>
-      <table>medication_prescriptions</table>
+      <table>master_definitions</table>
       <orderby/>
       <fail_on_multiple>N</fail_on_multiple>
       <eat_row_on_failure>N</eat_row_on_failure>
       <key>
-        <name>order_id_1</name>
-        <field>medication_prescription_id</field>
+        <name>drug_inventory_id</name>
+        <field>openmrs_metadata_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>master_def_entity_name</name>
+        <field>openmrs_entity_name</field>
         <condition>=</condition>
         <name2/>
       </key>
       <value>
-        <name>drug_id</name>
-        <rename>dispensed_drug_id</rename>
+        <name>master_definition_id</name>
+        <rename>master_def_drug_id</rename>
         <default/>
         <type>Integer</type>
       </value>
@@ -916,13 +1015,169 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>304</xloc>
+      <xloc>400</xloc>
+      <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>lookup encounter </name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>IDS</connection>
+    <cache>N</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>encounters</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>encounter_id</name>
+        <field>encounter_id</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1056</xloc>
       <yloc>240</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>if_value_numeric_isnull_put_value_text</name>
+    <name>medication_precriptions</name>
+    <type>TextFileOutput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <separator>,</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding>windows-1252</encoding>
+    <endedLine/>
+    <fileNameInField>N</fileNameInField>
+    <fileNameField/>
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>medication_prescriptions</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>csv</extention>
+      <append>N</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format/>
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery/>
+    </file>
+    <fields>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1232</xloc>
+      <yloc>464</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>order - medical_prescription</name>
+    <type>TableInput</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>RDS</connection>
+    <sql>SELECT DISTINCT o.order_id,
+    COALESCE(pillcount.pillcount,0) pillcount,
+    'drug' as master_def_entity_name,
+	o.encounter_id,
+    o.patient_id,
+	d.drug_inventory_id,
+    IF(LENGTH(IF(d.equivalent_daily_dose = 0, 1,d.equivalent_daily_dose)) IS NULL,1,(IF(d.equivalent_daily_dose = 0, 1,d.equivalent_daily_dose))) equivalent_daily_dose,
+    IF(LENGTH(IF(d.quantity = 0, 1,d.quantity)) IS NULL,1,(IF(d.quantity = 0, 1,d.quantity))) quantity,
+    o.start_date,
+  	o.auto_expire_date, 
+	o.instructions,
+    o.creator,
+    o.voided, 
+	o.voided_by,
+	o.void_reason, 
+	o.date_voided, 
+	o.date_created, 
+	o.updated_at,
+    o.created_at,
+    o.uuid
+FROM orders o
+  JOIN drug_order d 
+	ON o.order_id = d.order_id
+  LEFT JOIN pillcount
+    ON (o.order_id = pillcount.order_id)
+WHERE o.order_type_id = 1</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>96</xloc>
+      <yloc>48</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>total pills</name>
     <type>Calculator</type>
     <description/>
     <distribute>Y</distribute>
@@ -934,12 +1189,12 @@
     </partitioning>
     <failIfNoFile>Y</failIfNoFile>
     <calculation>
-      <field_name>adherence</field_name>
-      <calc_type>NVL</calc_type>
-      <field_a>value_numeric</field_a>
-      <field_b>cleaned_value_text</field_b>
+      <field_name>total_pills</field_name>
+      <calc_type>ADD</calc_type>
+      <field_a>quantity</field_a>
+      <field_b>pillcount</field_b>
       <field_c/>
-      <value_type>Number</value_type>
+      <value_type>Integer</value_type>
       <value_length>-1</value_length>
       <value_precision>-1</value_precision>
       <remove>N</remove>
@@ -957,14 +1212,14 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>704</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
+      <xloc>784</xloc>
+      <yloc>224</yloc>
+      <draw>N</draw>
     </GUI>
   </step>
   <step>
-    <name>medication_adherences</name>
-    <type>TableInput</type>
+    <name>Text file output</name>
+    <type>TextFileOutput</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -973,70 +1228,37 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>RDS</connection>
-    <sql>SELECT
-  o.obs_id,
-  o.order_id,
-  o.order_id,
-  o.order_id,
-  o.value_numeric,
-  o.value_text,
-  o.voided,
-  o.voided_by,
-  o.date_voided,
-  o.void_reason,
-  o.date_created,
-  o.created_at,
-  o.updated_at,
-  o.uuid
-FROM obs o
-WHERE concept_id = 6987
-
-
-</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>Y</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>80</xloc>
-      <yloc>240</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>remove_%</name>
-    <type>ReplaceString</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
+    <separator>,</separator>
+    <enclosure>"</enclosure>
+    <enclosure_forced>N</enclosure_forced>
+    <enclosure_fix_disabled>N</enclosure_fix_disabled>
+    <header>Y</header>
+    <footer>N</footer>
+    <format>DOS</format>
+    <compression>None</compression>
+    <encoding>windows-1252</encoding>
+    <endedLine/>
+    <fileNameInField>N</fileNameInField>
+    <fileNameField/>
+    <create_parent_folder>Y</create_parent_folder>
+    <file>
+      <name>medication_prescription</name>
+      <servlet_output>N</servlet_output>
+      <do_not_open_new_file_init>N</do_not_open_new_file_init>
+      <extention>csv</extention>
+      <append>Y</append>
+      <split>N</split>
+      <haspartno>N</haspartno>
+      <add_date>N</add_date>
+      <add_time>N</add_time>
+      <SpecifyFormat>N</SpecifyFormat>
+      <date_time_format/>
+      <add_to_result_filenames>Y</add_to_result_filenames>
+      <pad>N</pad>
+      <fast_dump>N</fast_dump>
+      <splitevery/>
+    </file>
     <fields>
-      <field>
-        <in_stream_name>value_text</in_stream_name>
-        <out_stream_name>cleaned_value_text</out_stream_name>
-        <use_regex>no</use_regex>
-        <replace_string>%</replace_string>
-        <replace_by_string/>
-        <set_empty_string>N</set_empty_string>
-        <replace_field_by_string/>
-        <whole_word>no</whole_word>
-        <case_sensitive>no</case_sensitive>
-        <is_unicode>no</is_unicode>
-      </field>
     </fields>
     <attributes/>
     <cluster_schema/>
@@ -1047,16 +1269,16 @@ WHERE concept_id = 6987
       </output>
     </remotesteps>
     <GUI>
-      <xloc>448</xloc>
-      <yloc>240</yloc>
+      <xloc>816</xloc>
+      <yloc>416</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step_error_handling>
     <error>
       <source_step>Insert / update</source_step>
-      <target_step>Text file output</target_step>
-      <is_enabled>Y</is_enabled>
+      <target_step>medication_precriptions</target_step>
+      <is_enabled>N</is_enabled>
       <nr_valuename/>
       <descriptions_valuename/>
       <fields_valuename/>

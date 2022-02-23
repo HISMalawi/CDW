@@ -7,7 +7,7 @@
   <created_user>-</created_user>
   <created_date>2019/12/13 06:16:11.606</created_date>
   <modified_user>-</modified_user>
-  <modified_date>2021/07/29 17:06:01.412</modified_date>
+  <modified_date>2022/01/19 11:00:57.917</modified_date>
   <parameters>
     </parameters>
   <connection>
@@ -23,6 +23,18 @@
     <data_tablespace/>
     <index_tablespace/>
     <attributes>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.rewriteBatchedStatements</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useCompression</code>
+        <attribute>true</attribute>
+      </attribute>
+      <attribute>
+        <code>EXTRA_OPTION_POSTGRESQL.useServerPrepStmts</code>
+        <attribute>false</attribute>
+      </attribute>
       <attribute>
         <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
         <attribute>N</attribute>
