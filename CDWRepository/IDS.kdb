@@ -1,6 +1,6 @@
   <connection>
     <name>IDS</name>
-    <server>localhost</server>
+    <server>0.0.0.0</server>
     <type>POSTGRESQL</type>
     <access>Native</access>
     <database>ids</database>

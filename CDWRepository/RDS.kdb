@@ -3,7 +3,7 @@
     <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds_b2c</database>
+    <database>rds_temp</database>
     <port>3306</port>
     <username>pentaho</username>
     <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
