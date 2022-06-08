@@ -428,7 +428,7 @@
     <created_user>-</created_user>
     <created_date>2019/12/14 14:13:30.404</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2021/08/19 11:10:24.924</modified_date>
+    <modified_date>2022/05/31 16:48:15.239</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
@@ -441,8 +441,8 @@
     <access>Native</access>
     <database>ids</database>
     <port>5432</port>
-    <username>postgres</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ac22dd93bddf</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
@@ -499,13 +499,13 @@
   </connection>
   <connection>
     <name>RDS</name>
-    <server>localhost</server>
+    <server>0.0.0.0</server>
     <type>MYSQL</type>
     <access>Native</access>
-    <database>rds</database>
+    <database>rds_b2c</database>
     <port>3306</port>
-    <username>b2c_admin</username>
-    <password>Encrypted 2be98afc86aa7f2e4cb79ac22dd93bddf</password>
+    <username>pentaho</username>
+    <password>Encrypted 2be98afc86aa7f2e4cb09ab7eca93a7d5</password>
     <servername/>
     <data_tablespace/>
     <index_tablespace/>
@@ -577,7 +577,7 @@
     <hop>
       <from>Insert / update</from>
       <to>person_address_errors</to>
-      <enabled>Y</enabled>
+      <enabled>N</enabled>
     </hop>
     <hop>
       <from>change_voided_to_boolean</from>
@@ -784,11 +784,9 @@
     <fields>
       <field>
         <name>person_address_id</name>
-        <rename/>
       </field>
       <field>
         <name>person_id</name>
-        <rename/>
       </field>
       <field>
         <name>value</name>
@@ -812,7 +810,6 @@
       </field>
       <field>
         <name>creator</name>
-        <rename/>
       </field>
       <field>
         <name>date_created</name>
@@ -824,11 +821,9 @@
       </field>
       <field>
         <name>voided</name>
-        <rename/>
       </field>
       <field>
         <name>voided_by</name>
-        <rename/>
       </field>
       <field>
         <name>date_voided</name>
@@ -836,7 +831,6 @@
       </field>
       <field>
         <name>void_reason</name>
-        <rename/>
       </field>
       <field>
         <name>county_district</name>
@@ -852,11 +846,9 @@
       </field>
       <field>
         <name>uuid</name>
-        <rename/>
       </field>
       <field>
         <name>created_at</name>
-        <rename/>
       </field>
       <select_unspecified>N</select_unspecified>
       <meta>
@@ -1009,7 +1001,7 @@ ON pa.person_id = pattr.person_id;</sql>
     <error>
       <source_step>Insert / update</source_step>
       <target_step>person_address_errors</target_step>
-      <is_enabled>Y</is_enabled>
+      <is_enabled>N</is_enabled>
       <nr_valuename/>
       <descriptions_valuename/>
       <fields_valuename/>
